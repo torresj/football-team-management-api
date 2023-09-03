@@ -1,0 +1,51 @@
+spring:
+  # H2 Database
+  datasource:
+    url: jdbc:h2:mem:testdb
+    username: test
+    password: test
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      database-platform: org.hibernate.dialect.H2Dialect
+      ddl-auto: create-drop
+    properties:
+      jakarta:
+        persistence:
+          sharedCache:
+            mode: UNSPECIFIED
+
+#Admin user
+admin:
+  user: admin
+  password: test
+
+#Loggin
+logging:
+  config: classpath:logback-spring-local.xml
+
+#JWT config
+jwt:
+  token:
+    secret: SecretKeyToGenerateAJSONWebTokens
+    expiration: 600000
+    prefix: Bearer
+    header: Authorization
+    issuer:
+      info: football-team-management-api
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+  health:
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true

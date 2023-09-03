@@ -10,11 +10,23 @@
 	</parent>
 	<groupId>com.torresj</groupId>
 	<artifactId>football-team-management-api</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.${revision}</version>
 	<name>football-team-management-api</name>
 	<description>Football Team Management API</description>
 	<properties>
 		<java.version>17</java.version>
+		<revision>0.0-SNAPSHOT</revision>
+		<lombok.version>1.18.26</lombok.version>
+		<springdoc-openapi.version>2.1.0</springdoc-openapi.version>
+		<h2.version>2.1.214</h2.version>
+		<mariadb-java-client.version>3.1.4</mariadb-java-client.version>
+		<jjwt-api.version>0.11.5</jjwt-api.version>
+		<mockito-core.version>5.3.1</mockito-core.version>
+		<certificate-authority-data></certificate-authority-data>
+		<cluster></cluster>
+		<client-certificate-data></client-certificate-data>
+		<client-key-data></client-key-data>
+		<kubernetes-user></kubernetes-user>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -29,6 +41,10 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
 
 		<dependency>
 			<groupId>com.h2database</groupId>
@@ -36,14 +52,37 @@
 			<scope>runtime</scope>
 		</dependency>
 		<dependency>
-			<groupId>com.mysql</groupId>
-			<artifactId>mysql-connector-j</artifactId>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<version>${lombok.version}</version>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+			<version>${springdoc-openapi.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.mariadb.jdbc</groupId>
+			<artifactId>mariadb-java-client</artifactId>
+			<version>${mariadb-java-client.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-api</artifactId>
+			<version>${jjwt-api.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-impl</artifactId>
+			<version>${jjwt-api.version}</version>
 			<scope>runtime</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.projectlombok</groupId>
-			<artifactId>lombok</artifactId>
-			<optional>true</optional>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-jackson</artifactId> <!-- or jjwt-gson if Gson is preferred -->
+			<version>${jjwt-api.version}</version>
+			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

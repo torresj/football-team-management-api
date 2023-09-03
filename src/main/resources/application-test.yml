@@ -1,0 +1,18 @@
+#Admin user
+admin:
+  user: admin
+  password: test
+
+#Loggin
+logging:
+  config: classpath:logback-spring-test.xml
+
+#JWT config
+jwt:
+  token:
+    secret: SecretKeyToGenerateAJSONWebTokens
+    expiration: 10000
+    prefix: Bearer
+    header: Authorization
+    issuer:
+      info: InReplay
