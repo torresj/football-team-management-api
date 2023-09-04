@@ -1,6 +1,5 @@
 package com.torresj.footballteammanagementapi.services;
 
-import com.torresj.footballteammanagementapi.dtos.RequestLoginDto;
 import com.torresj.footballteammanagementapi.dtos.ResponseLoginDto;
 import com.torresj.footballteammanagementapi.exceptions.MemberNotFoundException;
 

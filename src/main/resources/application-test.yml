@@ -3,6 +3,10 @@ admin:
   user: admin
   password: test
 
+#Default password
+default:
+  password: test
+
 #Loggin
 logging:
   config: classpath:logback-spring-test.xml

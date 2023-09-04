@@ -2,10 +2,15 @@ package com.torresj.footballteammanagementapi.services.impl;
 
 import com.torresj.footballteammanagementapi.dtos.MemberDto;
 import com.torresj.footballteammanagementapi.entities.MemberEntity;
+import com.torresj.footballteammanagementapi.enums.Role;
+import com.torresj.footballteammanagementapi.exceptions.MemberAlreadyExistsException;
+import com.torresj.footballteammanagementapi.exceptions.MemberNotFoundException;
 import com.torresj.footballteammanagementapi.repositories.MemberRepository;
 import com.torresj.footballteammanagementapi.security.CustomUserDetails;
 import com.torresj.footballteammanagementapi.services.MemberService;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -17,23 +22,101 @@ public class MemberServiceImpl implements MemberService, UserDetailsService {
 
   private final MemberRepository memberRepository;
 
+  @Value("${admin.user}")
+  private final String adminUser;
+
   @Override
-  public MemberDto get(long id) {
-    return null;
+  public MemberDto get(long id) throws MemberNotFoundException {
+    var member = memberRepository.findById(id).orElseThrow(() -> new MemberNotFoundException(""));
+    return new MemberDto(
+        member.getId(),
+        member.getName(),
+        member.getSurname(),
+        member.getPhone(),
+        member.getNCaptaincies(),
+        member.getRole());
   }
 
   @Override
-  public MemberDto update(String name, String surname, String phone) {
-    return null;
+  public List<MemberDto> get() {
+    return memberRepository.findAll().stream()
+        .map(
+            entity ->
+                new MemberDto(
+                    entity.getId(),
+                    entity.getName(),
+                    entity.getSurname(),
+                    entity.getPhone(),
+                    entity.getNCaptaincies(),
+                    entity.getRole()))
+        .filter(member -> !adminUser.equals(member.name()))
+        .toList();
   }
 
   @Override
-  public MemberDto create(String name, String surname, String phone) {
-    return null;
+  public MemberDto update(
+      long id, String name, String surname, String phone, int nCaptaincies, Role role)
+      throws MemberNotFoundException {
+    var member = memberRepository.findById(id).orElseThrow(() -> new MemberNotFoundException(""));
+    var memberUpdated =
+        MemberEntity.builder()
+            .id(member.getId())
+            .name(name)
+            .surname(surname)
+            .phone(phone)
+            .role(role)
+            .nCaptaincies(nCaptaincies)
+            .nonce(member.getNonce())
+            .password(member.getPassword())
+            .build();
+    return new MemberDto(memberUpdated.getId(), name, surname, phone, nCaptaincies, role);
   }
 
   @Override
-  public void delete(long id) {}
+  public MemberDto create(String name, String surname, String phone, String password, Role role)
+      throws MemberAlreadyExistsException {
+    if (memberRepository.findByNameAndSurname(name, surname).isPresent())
+      throw new MemberAlreadyExistsException(name);
+
+    var member =
+        memberRepository.save(
+            MemberEntity.builder()
+                .name(name)
+                .surname(surname)
+                .phone(phone)
+                .role(role)
+                .password(password)
+                .build());
+
+    return new MemberDto(
+        member.getId(),
+        member.getName(),
+        member.getSurname(),
+        member.getPhone(),
+        member.getNCaptaincies(),
+        member.getRole());
+  }
+
+  @Override
+  public void updatePassword(long id, String newPassword) throws MemberNotFoundException {
+    var member = memberRepository.findById(id).orElseThrow(() -> new MemberNotFoundException(""));
+    memberRepository.save(
+        MemberEntity.builder()
+            .id(id)
+            .name(member.getName())
+            .surname(member.getSurname())
+            .password(newPassword)
+            .nonce(member.getNonce())
+            .nCaptaincies(member.getNCaptaincies())
+            .role(member.getRole())
+            .phone(member.getPhone())
+            .build());
+  }
+
+  @Override
+  public void delete(long id) {
+    memberRepository.deleteById(id);
+  }
 
   @Override
   public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {

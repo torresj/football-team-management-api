@@ -19,6 +19,10 @@ admin:
   user: ${ADMIN_USER}
   password: ${ADMIN_PASSWORD}
 
+#Default password
+default:
+  password: ${DEFAULT_PASSWORD}
+
 #Loggin
 logging:
   config: classpath:logback-spring-prod.xml
