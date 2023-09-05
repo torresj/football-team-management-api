@@ -86,7 +86,6 @@ workflows:
       - build:
           context:
             - "Kubernetes cluster"
-            - "Github package"
       - deploy:
           context:
             - "Kubernetes cluster"
