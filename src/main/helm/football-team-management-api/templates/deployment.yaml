@@ -53,11 +53,11 @@ spec:
             - name: SPRING_PROFILES_ACTIVE
               value: "prod"
             - name: DB_NAME
-              value: "{{ .Values.db.db_name }}"
+              value: "{{ .Values.db.name }}"
             - name: DB_USER
-              value: "{{ .Values.db.db_user }}"
+              value: "{{ .Values.db.user }}"
             - name: DB_PASSWORD
-              value: "{{ .Values.db.db_password }}"
+              value: "{{ .Values.db.password }}"
             - name: ADMIN_USER
               value: "{{ .Values.admin.user }}"
             - name: ADMIN_PASSWORD

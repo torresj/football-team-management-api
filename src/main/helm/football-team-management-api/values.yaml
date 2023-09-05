@@ -32,9 +32,9 @@ cloud:
     password:
 
 db:
-  db_name:
-  db_user:
-  db_password:
+  name:
+  user:
+  password:
 
 admin:
   user:

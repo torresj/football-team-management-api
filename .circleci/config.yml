@@ -71,7 +71,7 @@ jobs:
       # Install chart
       - run:
           name: Install chart
-          command: helm upgrade football-team-management-api helm/football-team-management-api -n football --set db.db_user=$DB_USER,db.db_name=$DB_NAME,db.db_password=$DB_PASSWORD,admin.user=$ADMIN_USER,admin.password=ADMIN_PASSWORD,default.password=$DEFAULT_PASSWORD,jwt.token.secret=$JWT_TOKEN_SECRET,jwt.token.expiration=$JWT_TOKEN_EXPIRATION --install --kubeconfig=helm/kubeconfig
+          command: helm upgrade football-team-management-api helm/football-team-management-api -n football --set db.user=$DB_USER,db.name=$DB_NAME,db.password=$DB_PASSWORD,admin.user=$ADMIN_USER,admin.password=ADMIN_PASSWORD,default.password=$DEFAULT_PASSWORD,jwt.token.secret=$JWT_TOKEN_SECRET,jwt.token.expiration=$JWT_TOKEN_EXPIRATION --install --kubeconfig=helm/kubeconfig
       # Check deployment
       - run:
           name: Check deployment
