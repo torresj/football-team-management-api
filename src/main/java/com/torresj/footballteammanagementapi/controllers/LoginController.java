@@ -52,7 +52,8 @@ public class LoginController {
           RequestLoginDto loginDto) {
     try {
       log.info("[LOGIN] Attempt to login for " + loginDto.username());
-      ResponseLoginDto response = loginService.login(loginDto.username(), loginDto.password());
+      ResponseLoginDto response =
+          loginService.login(loginDto.username(), loginDto.password(), loginDto.nonce());
       log.debug(response.jwt());
       log.info("[LOGIN] Login success");
       return ResponseEntity.ok(response);

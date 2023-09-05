@@ -22,6 +22,10 @@
 		<mariadb-java-client.version>3.1.4</mariadb-java-client.version>
 		<jjwt-api.version>0.11.5</jjwt-api.version>
 		<mockito-core.version>5.3.1</mockito-core.version>
+		<jib-maven-plugin.version>3.3.2</jib-maven-plugin.version>
+		<jacoco-maven-plugin.version>0.8.10</jacoco-maven-plugin.version>
+		<coveralls-maven-plugin.version>4.3.0</coveralls-maven-plugin.version>
+		<jaxb-api.version>2.4.0-b180830.0359</jaxb-api.version>
 		<certificate-authority-data></certificate-authority-data>
 		<cluster></cluster>
 		<client-certificate-data></client-certificate-data>
@@ -97,6 +101,16 @@
 	</dependencies>
 
 	<build>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+			</resource>
+			<resource>
+				<directory>src/main/helm/</directory>
+				<filtering>true</filtering>
+				<targetPath>${project.basedir}/target/helm</targetPath>
+			</resource>
+		</resources>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
@@ -109,6 +123,58 @@
 						</exclude>
 					</excludes>
 				</configuration>
+			</plugin>
+			<!-- Jib -->
+			<plugin>
+				<groupId>com.google.cloud.tools</groupId>
+				<artifactId>jib-maven-plugin</artifactId>
+				<version>${jib-maven-plugin.version}</version>
+				<configuration>
+					<container>
+						<ports>
+							<port>8080</port>
+						</ports>
+					</container>
+					<to>
+						<image>registry.torresj.com/football-team-management-api:${project.version}</image>
+					</to>
+				</configuration>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>build</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>${jacoco-maven-plugin.version}</version>
+				<executions>
+					<execution>
+						<id>prepare-agent</id>
+						<goals>
+							<goal>prepare-agent</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.eluder.coveralls</groupId>
+				<artifactId>coveralls-maven-plugin</artifactId>
+				<version>${coveralls-maven-plugin.version}</version>
+				<configuration>
+					<repoToken>${env.COVERALLS_REPO_TOKEN}</repoToken>
+				</configuration>
+				<dependencies>
+					<dependency>
+						<groupId>javax.xml.bind</groupId>
+						<artifactId>jaxb-api</artifactId>
+						<version>${jaxb-api.version}</version>
+					</dependency>
+				</dependencies>
 			</plugin>
 		</plugins>
 	</build>
