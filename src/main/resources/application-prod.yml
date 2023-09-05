@@ -16,8 +16,8 @@ spring:
 
 #Admin user
 admin:
-  user: ${ADMIN_USER}
-  password: ${ADMIN_PASSWORD}
+  user: test
+  password: test
 
 #Default password
 default:
