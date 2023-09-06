@@ -1,5 +1,5 @@
-# Maria DB config
 spring:
+  # Maria DB config
   datasource:
     url: jdbc:mariadb://footballdb:3306/${DB_NAME}
     username: ${DB_USER}
@@ -7,7 +7,8 @@ spring:
     driver-class-name: org.mariadb.jdbc.Driver
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      database-platform: org.hibernate.dialect.MariaDB10Dialect
+      ddl-auto: update
     properties:
       jakarta:
         persistence:
