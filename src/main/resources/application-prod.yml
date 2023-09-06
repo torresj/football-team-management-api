@@ -7,7 +7,7 @@ spring:
     driver-class-name: org.mariadb.jdbc.Driver
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: create-drop
     properties:
       jakarta:
         persistence:
@@ -16,8 +16,8 @@ spring:
 
 #Admin user
 admin:
-  user: test
-  password: test
+  user: ${ADMIN_USER}
+  password: ${ADMIN_PASSWORD}
 
 #Default password
 default:
