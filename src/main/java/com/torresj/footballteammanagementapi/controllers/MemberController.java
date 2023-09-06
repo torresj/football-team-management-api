@@ -15,6 +15,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+
+import java.security.Principal;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -187,6 +189,34 @@ public class MemberController {
       throws MemberNotFoundException {
     log.info("[MEMBERS] Updating user " +id);
     memberService.updatePassword(id,encoder.encode(request.newPassword()));
+    log.info("[MEMBERS] Member updated");
+    return ResponseEntity.ok().build();
+  }
+
+  @PatchMapping("/me/password")
+  @Operation(summary = "Update Member password")
+  @ApiResponses(
+          value = {
+                  @ApiResponse(
+                          responseCode = "200",
+                          description = "Password updated",
+                          content = {@Content()}),
+                  @ApiResponse(
+                          responseCode = "404",
+                          description = "Member Not Found",
+                          content = {@Content()})
+          })
+  @SecurityRequirement(name = "Bearer Authentication")
+  ResponseEntity<Void> updateMyPassword(
+          @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                  description = "Update Member password",
+                  required = true,
+                  content = @Content(schema = @Schema(implementation = UpdatePasswordDto.class)))
+          @RequestBody
+          UpdatePasswordDto request, Principal principal)
+          throws MemberNotFoundException {
+    log.info("[MEMBERS] Updating user " +principal.getName());
+    memberService.updateMyPassword(principal.getName(),encoder.encode(request.newPassword()));
     log.info("[MEMBERS] Member updated");
     return ResponseEntity.ok().build();
   }

@@ -114,6 +114,28 @@ public class MemberServiceImpl implements MemberService, UserDetailsService {
   }
 
   @Override
+  public void updateMyPassword(String user, String newPassword) throws MemberNotFoundException {
+    if (user.split("\\.").length != 2) {
+      throw new MemberNotFoundException(user);
+    }
+    var member =
+        memberRepository
+            .findByNameAndSurname(user.split("\\.")[0], user.split("\\.")[1])
+            .orElseThrow(() -> new MemberNotFoundException(""));
+    memberRepository.save(
+        MemberEntity.builder()
+            .id(member.getId())
+            .name(member.getName())
+            .surname(member.getSurname())
+            .password(newPassword)
+            .nonce(member.getNonce())
+            .nCaptaincies(member.getNCaptaincies())
+            .role(member.getRole())
+            .phone(member.getPhone())
+            .build());
+  }
+
+  @Override
   public void delete(long id) {
     memberRepository.deleteById(id);
   }
