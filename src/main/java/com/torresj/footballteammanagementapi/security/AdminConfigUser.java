@@ -26,7 +26,6 @@ public class AdminConfigUser {
 
   @Bean
   void createAdminUser() {
-    log.info("Creating admin user: " + adminUser + "." + adminUser + " " + adminPassword);
     var member = memberRepository.findByNameAndSurname(adminUser, adminUser);
     member.ifPresent(memberRepository::delete);
     memberRepository.save(
