@@ -8,6 +8,7 @@ import com.torresj.footballteammanagementapi.exceptions.MemberNotFoundException;
 import com.torresj.footballteammanagementapi.repositories.MemberRepository;
 import com.torresj.footballteammanagementapi.security.CustomUserDetails;
 import com.torresj.footballteammanagementapi.services.MemberService;
+import com.torresj.footballteammanagementapi.services.MovementService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Service;
 public class MemberServiceImpl implements MemberService, UserDetailsService {
 
   private final MemberRepository memberRepository;
+  private final MovementService movementService;
 
   @Value("${admin.user}")
   private final String adminUser;
@@ -34,7 +36,8 @@ public class MemberServiceImpl implements MemberService, UserDetailsService {
         member.getSurname(),
         member.getPhone(),
         member.getNCaptaincies(),
-        member.getRole());
+        member.getRole(),
+        movementService.getBalance(id));
   }
 
   @Override
@@ -48,7 +51,8 @@ public class MemberServiceImpl implements MemberService, UserDetailsService {
                     entity.getSurname(),
                     entity.getPhone(),
                     entity.getNCaptaincies(),
-                    entity.getRole()))
+                    entity.getRole(),
+                    movementService.getBalance(entity.getId())))
         .filter(member -> !adminUser.equals(member.name()))
         .toList();
   }
@@ -69,7 +73,14 @@ public class MemberServiceImpl implements MemberService, UserDetailsService {
             .nonce(member.getNonce())
             .password(member.getPassword())
             .build();
-    return new MemberDto(memberUpdated.getId(), name, surname, phone, nCaptaincies, role);
+    return new MemberDto(
+        memberUpdated.getId(),
+        name,
+        surname,
+        phone,
+        nCaptaincies,
+        role,
+        movementService.getBalance(id));
   }
 
   @Override
@@ -94,7 +105,8 @@ public class MemberServiceImpl implements MemberService, UserDetailsService {
         member.getSurname(),
         member.getPhone(),
         member.getNCaptaincies(),
-        member.getRole());
+        member.getRole(),
+        movementService.getBalance(member.getId()));
   }
 
   @Override

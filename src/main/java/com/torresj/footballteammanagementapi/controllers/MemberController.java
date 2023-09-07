@@ -1,12 +1,10 @@
 package com.torresj.footballteammanagementapi.controllers;
 
-import com.torresj.footballteammanagementapi.dtos.CreateMemberDto;
-import com.torresj.footballteammanagementapi.dtos.MemberDto;
-import com.torresj.footballteammanagementapi.dtos.UpdateMemberDto;
-import com.torresj.footballteammanagementapi.dtos.UpdatePasswordDto;
+import com.torresj.footballteammanagementapi.dtos.*;
 import com.torresj.footballteammanagementapi.exceptions.MemberAlreadyExistsException;
 import com.torresj.footballteammanagementapi.exceptions.MemberNotFoundException;
 import com.torresj.footballteammanagementapi.services.MemberService;
+import com.torresj.footballteammanagementapi.services.MovementService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -15,7 +13,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-
 import java.security.Principal;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +31,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 public class MemberController {
 
   private final MemberService memberService;
+  private final MovementService movementService;
   private final PasswordEncoder encoder;
 
   @Value("${default.password}")
@@ -84,6 +82,32 @@ public class MemberController {
     var member = memberService.get(id);
     log.info("[MEMBERS] Member found");
     return ResponseEntity.ok(member);
+  }
+
+  @GetMapping("/{id}/movements")
+  @SecurityRequirement(name = "Bearer Authentication")
+  @Operation(summary = "Get movements by member ID")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Movements found",
+            content = {
+              @Content(
+                  mediaType = "application/json",
+                  array = @ArraySchema(schema = @Schema(implementation = MovementDto.class)))
+            }),
+        @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content),
+        @ApiResponse(responseCode = "403", description = "Forbidden", content = @Content),
+        @ApiResponse(responseCode = "404", description = "Not found", content = @Content),
+      })
+  @SecurityRequirement(name = "Bearer Authentication")
+  ResponseEntity<List<MovementDto>> getMovements(
+      @Parameter(description = "Member id") @PathVariable long id) throws MemberNotFoundException {
+    log.info("[MEMBERS] Getting movements for member " + id);
+    var movements = movementService.getByMember(id);
+    log.info("[MEMBERS] Movements found");
+    return ResponseEntity.ok(movements);
   }
 
   @Secured("ROLE_ADMIN")
@@ -187,8 +211,8 @@ public class MemberController {
           @RequestBody
           UpdatePasswordDto request)
       throws MemberNotFoundException {
-    log.info("[MEMBERS] Updating user " +id);
-    memberService.updatePassword(id,encoder.encode(request.newPassword()));
+    log.info("[MEMBERS] Updating user " + id);
+    memberService.updatePassword(id, encoder.encode(request.newPassword()));
     log.info("[MEMBERS] Member updated");
     return ResponseEntity.ok().build();
   }
@@ -196,43 +220,44 @@ public class MemberController {
   @PatchMapping("/me/password")
   @Operation(summary = "Update Member password")
   @ApiResponses(
-          value = {
-                  @ApiResponse(
-                          responseCode = "200",
-                          description = "Password updated",
-                          content = {@Content()}),
-                  @ApiResponse(
-                          responseCode = "404",
-                          description = "Member Not Found",
-                          content = {@Content()})
-          })
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Password updated",
+            content = {@Content()}),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Member Not Found",
+            content = {@Content()})
+      })
   @SecurityRequirement(name = "Bearer Authentication")
   ResponseEntity<Void> updateMyPassword(
-          @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                  description = "Update Member password",
-                  required = true,
-                  content = @Content(schema = @Schema(implementation = UpdatePasswordDto.class)))
+      @io.swagger.v3.oas.annotations.parameters.RequestBody(
+              description = "Update Member password",
+              required = true,
+              content = @Content(schema = @Schema(implementation = UpdatePasswordDto.class)))
           @RequestBody
-          UpdatePasswordDto request, Principal principal)
-          throws MemberNotFoundException {
-    log.info("[MEMBERS] Updating user " +principal.getName());
-    memberService.updateMyPassword(principal.getName(),encoder.encode(request.newPassword()));
+          UpdatePasswordDto request,
+      Principal principal)
+      throws MemberNotFoundException {
+    log.info("[MEMBERS] Updating user " + principal.getName());
+    memberService.updateMyPassword(principal.getName(), encoder.encode(request.newPassword()));
     log.info("[MEMBERS] Member updated");
     return ResponseEntity.ok().build();
   }
 
   @Secured("ROLE_ADMIN")
   @DeleteMapping("/{id}")
-  @Operation(summary = "Delete template")
+  @Operation(summary = "Delete member")
   @ApiResponses(
       value = {
         @ApiResponse(
             responseCode = "200",
-            description = "template deleted",
+            description = "member deleted",
             content = {@Content()}),
         @ApiResponse(
             responseCode = "404",
-            description = "Template not found",
+            description = "member not found",
             content = {@Content()})
       })
   @SecurityRequirement(name = "Bearer Authentication")
