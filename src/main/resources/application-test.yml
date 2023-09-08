@@ -15,7 +15,7 @@ logging:
 jwt:
   token:
     secret: SecretKeyToGenerateAJSONWebTokens
-    expiration: 10000
+    expiration: 100000000
     prefix: Bearer
     header: Authorization
     issuer:
