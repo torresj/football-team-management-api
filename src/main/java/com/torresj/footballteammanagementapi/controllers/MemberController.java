@@ -125,7 +125,7 @@ public class MemberController {
             content = {@Content()})
       })
   @SecurityRequirement(name = "Bearer Authentication")
-  ResponseEntity<MemberDto> create(
+  ResponseEntity<Void> create(
       @io.swagger.v3.oas.annotations.parameters.RequestBody(
               description = "Create Member",
               required = true,
@@ -175,8 +175,7 @@ public class MemberController {
           UpdateMemberDto request)
       throws MemberNotFoundException {
     log.info("[MEMBERS] Updating user " + request.name() + " " + request.surname());
-    var member =
-        memberService.update(
+    memberService.update(
             id,
             request.name(),
             request.surname(),

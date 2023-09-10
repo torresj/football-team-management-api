@@ -62,7 +62,7 @@ public class MemberServiceImpl implements MemberService, UserDetailsService {
       long id, String name, String surname, String phone, int nCaptaincies, Role role)
       throws MemberNotFoundException {
     var member = memberRepository.findById(id).orElseThrow(() -> new MemberNotFoundException(""));
-    var memberUpdated =
+    var memberUpdated =memberRepository.save(
         MemberEntity.builder()
             .id(member.getId())
             .name(name)
@@ -72,7 +72,7 @@ public class MemberServiceImpl implements MemberService, UserDetailsService {
             .nCaptaincies(nCaptaincies)
             .nonce(member.getNonce())
             .password(member.getPassword())
-            .build();
+            .build());
     return new MemberDto(
         memberUpdated.getId(),
         name,
