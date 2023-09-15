@@ -72,7 +72,7 @@ public class LoginControllerTest {
   void loginWithUser() throws Exception {
     var member = memberRepository.save(
         MemberEntity.builder()
-            .name("test")
+            .name("loginNotAdminTest")
             .surname("test")
             .phone("")
             .role(Role.USER)
@@ -87,12 +87,12 @@ public class LoginControllerTest {
                     .content(
                         objectMapper.writeValueAsString(
                             new RequestLoginDto(
-                                "test.test", "test", Instant.now().getEpochSecond()))))
+                                "loginNotAdminTest.test", "test", Instant.now().getEpochSecond()))))
             .andExpect(status().isOk());
     var content = result.andReturn().getResponse().getContentAsString();
     ResponseLoginDto response = objectMapper.readValue(content, ResponseLoginDto.class);
 
-    Assertions.assertEquals("test.test", jwtService.validateJWS(response.jwt()));
+    Assertions.assertEquals("loginNotAdminTest.test", jwtService.validateJWS(response.jwt()));
 
     memberRepository.delete(member);
   }

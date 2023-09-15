@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @RestController
-@RequestMapping("v1/movement")
+@RequestMapping("v1/movements")
 @Slf4j
 @RequiredArgsConstructor
 public class MovementController {
