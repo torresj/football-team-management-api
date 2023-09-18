@@ -5,13 +5,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.torresj.footballteammanagementapi.dtos.*;
 import com.torresj.footballteammanagementapi.entities.MatchEntity;
 import com.torresj.footballteammanagementapi.entities.MemberEntity;
-import com.torresj.footballteammanagementapi.entities.MovementEntity;
-import com.torresj.footballteammanagementapi.enums.MovementType;
 import com.torresj.footballteammanagementapi.enums.Role;
 import com.torresj.footballteammanagementapi.exceptions.MemberNotFoundException;
 import com.torresj.footballteammanagementapi.repositories.MatchRepository;
 import com.torresj.footballteammanagementapi.repositories.MemberRepository;
-import com.torresj.footballteammanagementapi.repositories.MovementRepository;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -29,7 +26,6 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Random;
 import java.util.stream.Collectors;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -162,7 +158,7 @@ public class MatchControllerTest {
 
         var content = result.andReturn().getResponse().getContentAsString();
         List<MatchDto> matches =
-                objectMapper.readValue(content, new TypeReference<List<MatchDto>>() {
+                objectMapper.readValue(content, new TypeReference<>() {
                 });
 
         Assertions.assertEquals(2, matches.size());
@@ -254,7 +250,7 @@ public class MatchControllerTest {
         var content = result.andReturn().getResponse().getContentAsString();
         var match = objectMapper.readValue(content, MatchDto.class);
 
-        Assertions.assertEquals(matches.get(0).getMatchDay(),match.matchDay());
+        Assertions.assertEquals(matches.get(0).getMatchDay(), match.matchDay());
 
         matchRepository.deleteAll(matches);
     }
@@ -293,7 +289,7 @@ public class MatchControllerTest {
 
         if (token == null) loginWithUser("MatchUser5");
 
-        var result = mockMvc
+        mockMvc
                 .perform(
                         get("/v1/matches/next")
                                 .header("Authorization", "Bearer " + token))
@@ -304,7 +300,7 @@ public class MatchControllerTest {
 
     @Test
     @DisplayName("Create match")
-    void createMember() throws Exception {
+    void createMatch() throws Exception {
         var match = new CreateMatchDto(LocalDate.now().plusDays(1));
 
         if (adminToken == null) loginWithAdmin();
@@ -321,5 +317,56 @@ public class MatchControllerTest {
         Assertions.assertTrue(matchRepository.findByMatchDay(match.matchDay()).isPresent());
 
         matchRepository.delete(matchRepository.findByMatchDay(match.matchDay()).get());
+    }
+
+    @Test
+    @DisplayName("Create match with an existing match already created")
+    void createMatchAlreadyCreated() throws Exception {
+        var matchInDb = matchRepository.save(MatchEntity.builder()
+                .matchDay(LocalDate.now())
+                .confirmedPlayers(new HashSet<>())
+                .notAvailablePlayers(new HashSet<>())
+                .unConfirmedPlayers(
+                        memberRepository.findAll().stream()
+                                .filter(memberEntity -> adminUser.equals(memberEntity.getName()))
+                                .map(MemberEntity::getId).collect(Collectors.toSet()))
+                .teamAPlayers(new ArrayList<>())
+                .teamBPlayers(new ArrayList<>())
+                .teamAGuests(new ArrayList<>())
+                .teamBGuests(new ArrayList<>())
+                .closed(false)
+                .build());
+
+        var match = new CreateMatchDto(LocalDate.now().plusDays(1));
+
+        if (adminToken == null) loginWithAdmin();
+
+        mockMvc
+                .perform(
+                        post("/v1/matches")
+                                .header("Authorization", "Bearer " + adminToken)
+                                .accept(MediaType.APPLICATION_JSON)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(match)))
+                .andExpect(status().isBadRequest());
+
+        matchRepository.delete(matchInDb);
+    }
+
+    @Test
+    @DisplayName("Create match without admin role")
+    void createMatchNotAdminRole() throws Exception {
+        var match = new CreateMatchDto(LocalDate.now().plusDays(1));
+
+        if (token == null) loginWithUser("MatchUser6");
+
+        mockMvc
+                .perform(
+                        post("/v1/matches")
+                                .header("Authorization", "Bearer " + token)
+                                .accept(MediaType.APPLICATION_JSON)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(match)))
+                .andExpect(status().isForbidden());
     }
 }
