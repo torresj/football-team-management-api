@@ -1,8 +1,6 @@
 package com.torresj.footballteammanagementapi.configs;
 
-import com.torresj.footballteammanagementapi.exceptions.MemberAlreadyExistsException;
-import com.torresj.footballteammanagementapi.exceptions.MemberNotFoundException;
-import com.torresj.footballteammanagementapi.exceptions.MovementNotFoundException;
+import com.torresj.footballteammanagementapi.exceptions.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -37,6 +35,33 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     ProblemDetail problemDetail =
             ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
     problemDetail.setTitle("Movement Not Found");
+    log.error(e.toString());
+    return problemDetail;
+  }
+
+  @ExceptionHandler(MatchNotFoundException.class)
+  ProblemDetail matchNotFoundException(MatchNotFoundException e) {
+    ProblemDetail problemDetail =
+            ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
+    problemDetail.setTitle("Match Not Found");
+    log.error(e.toString());
+    return problemDetail;
+  }
+
+  @ExceptionHandler(NextMatchException.class)
+  ProblemDetail nextMatchException(NextMatchException e) {
+    ProblemDetail problemDetail =
+            ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
+    problemDetail.setTitle("Next match not created yet");
+    log.error(e.toString());
+    return problemDetail;
+  }
+
+  @ExceptionHandler(MatchAlreadyExistsException.class)
+  ProblemDetail matchAlreadyExistsException(MatchAlreadyExistsException e) {
+    ProblemDetail problemDetail =
+            ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, e.getMessage());
+    problemDetail.setTitle("Match already exists");
     log.error(e.toString());
     return problemDetail;
   }

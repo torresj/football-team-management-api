@@ -17,8 +17,10 @@ import com.torresj.footballteammanagementapi.enums.Role;
 import com.torresj.footballteammanagementapi.exceptions.MemberNotFoundException;
 import com.torresj.footballteammanagementapi.repositories.MemberRepository;
 import com.torresj.footballteammanagementapi.repositories.MovementRepository;
+
 import java.util.List;
 import java.util.Random;
+
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,517 +36,519 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 @SpringBootTest
 @AutoConfigureMockMvc
 public class MemberControllerTest {
-  @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
-  @Autowired
-  private MockMvc mockMvc;
 
-  @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
-  @Autowired
-  private ObjectMapper objectMapper;
+    @Autowired
+    private MockMvc mockMvc;
+    @Autowired
+    private ObjectMapper objectMapper;
+    @Autowired
+    private MemberRepository memberRepository;
+    @Autowired
+    private MovementRepository movementRepository;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
-  @Autowired private MemberRepository memberRepository;
-  @Autowired private MovementRepository movementRepository;
-  @Autowired private PasswordEncoder passwordEncoder;
+    @Value("${admin.user}")
+    private String adminUser;
 
-  @Value("${admin.user}")
-  private String adminUser;
+    @Value("${admin.password}")
+    private String adminPassword;
 
-  @Value("${admin.password}")
-  private String adminPassword;
+    private String adminToken;
+    private String token;
 
-  private String adminToken;
-  private String token;
+    private void loginWithAdmin() throws Exception {
+        var member =
+                memberRepository
+                        .findByNameAndSurname(adminUser, adminUser)
+                        .orElseThrow(() -> new MemberNotFoundException(""));
 
-  private void loginWithAdmin() throws Exception {
-    var member =
-        memberRepository
-            .findByNameAndSurname(adminUser, adminUser)
-            .orElseThrow(() -> new MemberNotFoundException(""));
+        var result =
+                mockMvc
+                        .perform(
+                                MockMvcRequestBuilders.post("/v1/login")
+                                        .accept(MediaType.APPLICATION_JSON)
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(
+                                                objectMapper.writeValueAsString(
+                                                        new RequestLoginDto(
+                                                                adminUser + "." + adminUser,
+                                                                adminPassword,
+                                                                member.getNonce() + 1))))
+                        .andExpect(status().isOk());
+        var content = result.andReturn().getResponse().getContentAsString();
+        ResponseLoginDto response = objectMapper.readValue(content, ResponseLoginDto.class);
+        adminToken = response.jwt();
+    }
 
-    var result =
-        mockMvc
-            .perform(
-                MockMvcRequestBuilders.post("/v1/login")
-                    .accept(MediaType.APPLICATION_JSON)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(
-                        objectMapper.writeValueAsString(
-                            new RequestLoginDto(
-                                adminUser + "." + adminUser,
-                                adminPassword,
-                                member.getNonce() + 1))))
-            .andExpect(status().isOk());
-    var content = result.andReturn().getResponse().getContentAsString();
-    ResponseLoginDto response = objectMapper.readValue(content, ResponseLoginDto.class);
-    adminToken = response.jwt();
-  }
+    private void loginWithUser(String name) throws Exception {
+        var entity =
+                memberRepository
+                        .findByNameAndSurname(name, name)
+                        .orElse(
+                                memberRepository.save(
+                                        MemberEntity.builder()
+                                                .role(Role.USER)
+                                                .phone("")
+                                                .password(passwordEncoder.encode("test"))
+                                                .name(name)
+                                                .surname(name)
+                                                .build()));
 
-  private void loginWithUser(String name) throws Exception {
-    var entity =
-        memberRepository
-            .findByNameAndSurname(name, name)
-            .orElse(
+        var result =
+                mockMvc
+                        .perform(
+                                MockMvcRequestBuilders.post("/v1/login")
+                                        .accept(MediaType.APPLICATION_JSON)
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(
+                                                objectMapper.writeValueAsString(
+                                                        new RequestLoginDto(
+                                                                entity.getName() + "." + entity.getSurname(),
+                                                                "test",
+                                                                entity.getNonce() + 1))))
+                        .andExpect(status().isOk());
+        var content = result.andReturn().getResponse().getContentAsString();
+        ResponseLoginDto response = objectMapper.readValue(content, ResponseLoginDto.class);
+        token = response.jwt();
+    }
+
+    @Test
+    @DisplayName("Get all members")
+    void getAllMembers() throws Exception {
+        var membersEntities =
+                memberRepository.saveAll(
+                        List.of(
+                                MemberEntity.builder()
+                                        .name("test1")
+                                        .surname("test1")
+                                        .password("test1")
+                                        .phone("")
+                                        .role(Role.USER)
+                                        .build(),
+                                MemberEntity.builder()
+                                        .name("test2")
+                                        .surname("test2")
+                                        .password("test2")
+                                        .phone("")
+                                        .role(Role.USER)
+                                        .build()));
+
+        if (adminToken == null) loginWithAdmin();
+
+        var result =
+                mockMvc
+                        .perform(get("/v1/members").header("Authorization", "Bearer " + adminToken))
+                        .andExpect(status().isOk());
+
+        var content = result.andReturn().getResponse().getContentAsString();
+        List<MemberDto> members =
+                objectMapper.readValue(content, new TypeReference<List<MemberDto>>() {
+                });
+
+        Assertions.assertTrue(members.size() >= 2);
+        memberRepository.deleteAll(membersEntities);
+    }
+
+    @Test
+    @DisplayName("Get member by ID")
+    void getMemberById() throws Exception {
+        var memberEntity =
                 memberRepository.save(
-                    MemberEntity.builder()
-                        .role(Role.USER)
-                        .phone("")
-                        .password(passwordEncoder.encode("test"))
-                        .name(name)
-                        .surname(name)
-                        .build()));
+                        MemberEntity.builder()
+                                .name("test1")
+                                .surname("test1")
+                                .password("test1")
+                                .phone("")
+                                .role(Role.USER)
+                                .build());
 
-    var result =
+        if (adminToken == null) loginWithAdmin();
+
         mockMvc
-            .perform(
-                MockMvcRequestBuilders.post("/v1/login")
-                    .accept(MediaType.APPLICATION_JSON)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(
-                        objectMapper.writeValueAsString(
-                            new RequestLoginDto(
-                                entity.getName() + "." + entity.getSurname(),
-                                "test",
-                                entity.getNonce() + 1))))
-            .andExpect(status().isOk());
-    var content = result.andReturn().getResponse().getContentAsString();
-    ResponseLoginDto response = objectMapper.readValue(content, ResponseLoginDto.class);
-    token = response.jwt();
-  }
+                .perform(
+                        get("/v1/members/" + memberEntity.getId())
+                                .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk());
 
-  @Test
-  @DisplayName("Get all members")
-  void getAllMembers() throws Exception {
-    var membersEntities =
-        memberRepository.saveAll(
-            List.of(
-                MemberEntity.builder()
-                    .name("test1")
-                    .surname("test1")
-                    .password("test1")
-                    .phone("")
-                    .role(Role.USER)
-                    .build(),
-                MemberEntity.builder()
-                    .name("test2")
-                    .surname("test2")
-                    .password("test2")
-                    .phone("")
-                    .role(Role.USER)
-                    .build()));
+        memberRepository.delete(memberEntity);
+    }
 
-    if (adminToken == null) loginWithAdmin();
+    @Test
+    @DisplayName("Get member by ID that doesn't exist")
+    void getMemberByIdNotExists() throws Exception {
+        if (adminToken == null) loginWithAdmin();
 
-    var result =
         mockMvc
-            .perform(get("/v1/members").header("Authorization", "Bearer " + adminToken))
-            .andExpect(status().isOk());
+                .perform(
+                        get("/v1/members/" + new Random().nextInt())
+                                .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isNotFound());
+    }
 
-    var content = result.andReturn().getResponse().getContentAsString();
-    List<MemberDto> members =
-        objectMapper.readValue(content, new TypeReference<List<MemberDto>>() {});
+    @Test
+    @DisplayName("Get member movements")
+    void getMemberMovements() throws Exception {
+        var memberEntity =
+                memberRepository.save(
+                        MemberEntity.builder()
+                                .name("test1")
+                                .surname("test1")
+                                .password("test1")
+                                .phone("")
+                                .role(Role.USER)
+                                .build());
 
-    Assertions.assertTrue(members.size() >= 2);
-    memberRepository.deleteAll(membersEntities);
-  }
+        movementRepository.saveAll(
+                List.of(
+                        MovementEntity.builder()
+                                .memberId(memberEntity.getId())
+                                .type(MovementType.EXPENSE)
+                                .description("")
+                                .amount(-30)
+                                .build(),
+                        MovementEntity.builder()
+                                .memberId(memberEntity.getId())
+                                .type(MovementType.INCOME)
+                                .description("")
+                                .amount(20)
+                                .build()));
 
-  @Test
-  @DisplayName("Get member by ID")
-  void getMemberById() throws Exception {
-    var memberEntity =
-        memberRepository.save(
-            MemberEntity.builder()
-                .name("test1")
-                .surname("test1")
-                .password("test1")
-                .phone("")
-                .role(Role.USER)
-                .build());
+        if (adminToken == null) loginWithAdmin();
 
-    if (adminToken == null) loginWithAdmin();
+        var movementResults =
+                mockMvc
+                        .perform(
+                                get("/v1/members/" + memberEntity.getId() + "/movements")
+                                        .header("Authorization", "Bearer " + adminToken))
+                        .andExpect(status().isOk());
 
-    mockMvc
-        .perform(
-            get("/v1/members/" + memberEntity.getId())
-                .header("Authorization", "Bearer " + adminToken))
-        .andExpect(status().isOk());
+        var memberResult =
+                mockMvc
+                        .perform(
+                                get("/v1/members/" + memberEntity.getId())
+                                        .header("Authorization", "Bearer " + adminToken))
+                        .andExpect(status().isOk());
 
-    memberRepository.delete(memberEntity);
-  }
+        var movementContent = movementResults.andReturn().getResponse().getContentAsString();
+        List<MovementDto> movements =
+                objectMapper.readValue(movementContent, new TypeReference<List<MovementDto>>() {
+                });
 
-  @Test
-  @DisplayName("Get member by ID that doesn't exist")
-  void getMemberByIdNotExists() throws Exception {
-    if (adminToken == null) loginWithAdmin();
+        var memberContent = memberResult.andReturn().getResponse().getContentAsString();
+        MemberDto member = objectMapper.readValue(memberContent, MemberDto.class);
 
-    mockMvc
-        .perform(
-            get("/v1/members/" + new Random().nextInt())
-                .header("Authorization", "Bearer " + adminToken))
-        .andExpect(status().isNotFound());
-  }
+        Assertions.assertEquals(2, movements.size());
+        Assertions.assertEquals(-10, member.balance());
 
-  @Test
-  @DisplayName("Get member movements")
-  void getMemberMovements() throws Exception {
-    var memberEntity =
-        memberRepository.save(
-            MemberEntity.builder()
-                .name("test1")
-                .surname("test1")
-                .password("test1")
-                .phone("")
-                .role(Role.USER)
-                .build());
+        memberRepository.delete(memberEntity);
+        movementRepository.deleteAll();
+    }
 
-    movementRepository.saveAll(
-        List.of(
-            MovementEntity.builder()
-                .memberId(memberEntity.getId())
-                .type(MovementType.EXPENSE)
-                .description("")
-                .amount(-30)
-                .build(),
-            MovementEntity.builder()
-                .memberId(memberEntity.getId())
-                .type(MovementType.INCOME)
-                .description("")
-                .amount(20)
-                .build()));
+    @Test
+    @DisplayName("Get member movements from member that doesn't exist")
+    void getMemberMovementsNotExists() throws Exception {
 
-    if (adminToken == null) loginWithAdmin();
+        movementRepository.saveAll(
+                List.of(
+                        MovementEntity.builder()
+                                .memberId(10)
+                                .type(MovementType.EXPENSE)
+                                .description("")
+                                .amount(-30)
+                                .build(),
+                        MovementEntity.builder()
+                                .memberId(10)
+                                .type(MovementType.INCOME)
+                                .description("")
+                                .amount(20)
+                                .build()));
 
-    var movementResults =
+        if (adminToken == null) loginWithAdmin();
+
         mockMvc
-            .perform(
-                get("/v1/members/" + memberEntity.getId() + "/movements")
-                    .header("Authorization", "Bearer " + adminToken))
-            .andExpect(status().isOk());
+                .perform(get("/v1/members/10/movements").header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isNotFound());
 
-    var memberResult =
+        movementRepository.deleteAll();
+    }
+
+    @Test
+    @DisplayName("Create member")
+    void createMember() throws Exception {
+        var member = new CreateMemberDto("test", "test", "", Role.USER);
+
+        if (adminToken == null) loginWithAdmin();
+
         mockMvc
-            .perform(
-                get("/v1/members/" + memberEntity.getId())
-                    .header("Authorization", "Bearer " + adminToken))
-            .andExpect(status().isOk());
+                .perform(
+                        post("/v1/members")
+                                .header("Authorization", "Bearer " + adminToken)
+                                .accept(MediaType.APPLICATION_JSON)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(member)))
+                .andExpect(status().isCreated());
 
-    var movementContent = movementResults.andReturn().getResponse().getContentAsString();
-    List<MovementDto> movements =
-        objectMapper.readValue(movementContent, new TypeReference<List<MovementDto>>() {});
+        Assertions.assertTrue(memberRepository.findByNameAndSurname("test", "test").isPresent());
 
-    var memberContent = memberResult.andReturn().getResponse().getContentAsString();
-    MemberDto member = objectMapper.readValue(memberContent, MemberDto.class);
+        memberRepository.delete(memberRepository.findByNameAndSurname("test", "test").get());
+    }
 
-    Assertions.assertEquals(2, movements.size());
-    Assertions.assertEquals(-10, member.balance());
+    @Test
+    @DisplayName("Create member already exists")
+    void createMemberAlreadyExits() throws Exception {
+        var member = new CreateMemberDto("test", "test", "", Role.USER);
+        var entity =
+                memberRepository.save(
+                        MemberEntity.builder()
+                                .role(member.role())
+                                .phone(member.phone())
+                                .password("test")
+                                .name(member.name())
+                                .surname(member.surname())
+                                .build());
 
-    memberRepository.delete(memberEntity);
-    movementRepository.deleteAll();
-  }
+        if (adminToken == null) loginWithAdmin();
 
-  @Test
-  @DisplayName("Get member movements from member that doesn't exist")
-  void getMemberMovementsNotExists() throws Exception {
+        mockMvc
+                .perform(
+                        post("/v1/members")
+                                .header("Authorization", "Bearer " + adminToken)
+                                .accept(MediaType.APPLICATION_JSON)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(member)))
+                .andExpect(status().isBadRequest());
 
-    movementRepository.saveAll(
-        List.of(
-            MovementEntity.builder()
-                .memberId(10)
-                .type(MovementType.EXPENSE)
-                .description("")
-                .amount(-30)
-                .build(),
-            MovementEntity.builder()
-                .memberId(10)
-                .type(MovementType.INCOME)
-                .description("")
-                .amount(20)
-                .build()));
+        memberRepository.delete(entity);
+    }
 
-    if (adminToken == null) loginWithAdmin();
+    @Test
+    @DisplayName("Create member without admin role")
+    void createMemberWithoutAdminRole() throws Exception {
+        var member = new CreateMemberDto("test", "test", "", Role.USER);
 
-    mockMvc
-        .perform(get("/v1/members/10/movements").header("Authorization", "Bearer " + adminToken))
-        .andExpect(status().isNotFound());
+        if (token == null) loginWithUser("User1");
 
-    movementRepository.deleteAll();
-  }
+        mockMvc
+                .perform(
+                        post("/v1/members")
+                                .header("Authorization", "Bearer " + token)
+                                .accept(MediaType.APPLICATION_JSON)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(member)))
+                .andExpect(status().isForbidden());
+    }
 
-  @Test
-  @DisplayName("Create member")
-  void createMember() throws Exception {
-    var member = new CreateMemberDto("test", "test", "", Role.USER);
+    @Test
+    @DisplayName("Update member")
+    void updateMember() throws Exception {
+        var entity =
+                memberRepository.save(
+                        MemberEntity.builder()
+                                .role(Role.USER)
+                                .phone("")
+                                .password("test")
+                                .name("test")
+                                .surname("test")
+                                .build());
+        var updateDto = new UpdateMemberDto("test2", "test2", "1", Role.ADMIN, 10);
 
-    if (adminToken == null) loginWithAdmin();
+        if (adminToken == null) loginWithAdmin();
 
-    mockMvc
-        .perform(
-            post("/v1/members")
-                .header("Authorization", "Bearer " + adminToken)
-                .accept(MediaType.APPLICATION_JSON)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(member)))
-        .andExpect(status().isCreated());
+        mockMvc
+                .perform(
+                        put("/v1/members/" + entity.getId())
+                                .header("Authorization", "Bearer " + adminToken)
+                                .accept(MediaType.APPLICATION_JSON)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(updateDto)))
+                .andExpect(status().isOk());
 
-    Assertions.assertTrue(memberRepository.findByNameAndSurname("test", "test").isPresent());
+        var member = memberRepository.findByNameAndSurname("test2", "test2");
+        Assertions.assertTrue(member.isPresent());
+        Assertions.assertEquals(Role.ADMIN, member.get().getRole());
+        Assertions.assertEquals(10, member.get().getNCaptaincies());
+        Assertions.assertEquals("1", member.get().getPhone());
 
-    memberRepository.delete(memberRepository.findByNameAndSurname("test", "test").get());
-  }
+        memberRepository.deleteById(entity.getId());
+    }
 
-  @Test
-  @DisplayName("Create member already exists")
-  void createMemberAlreadyExits() throws Exception {
-    var member = new CreateMemberDto("test", "test", "", Role.USER);
-    var entity =
-        memberRepository.save(
-            MemberEntity.builder()
-                .role(member.role())
-                .phone(member.phone())
-                .password("test")
-                .name(member.name())
-                .surname(member.surname())
-                .build());
+    @Test
+    @DisplayName("Update member doesn't exist")
+    void updateMemberNotExist() throws Exception {
+        var updateDto = new UpdateMemberDto("test2", "test2", "1", Role.ADMIN, 10);
 
-    if (adminToken == null) loginWithAdmin();
+        if (adminToken == null) loginWithAdmin();
 
-    mockMvc
-        .perform(
-            post("/v1/members")
-                .header("Authorization", "Bearer " + adminToken)
-                .accept(MediaType.APPLICATION_JSON)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(member)))
-        .andExpect(status().isBadRequest());
+        mockMvc
+                .perform(
+                        put("/v1/members/" + new Random().nextInt())
+                                .header("Authorization", "Bearer " + adminToken)
+                                .accept(MediaType.APPLICATION_JSON)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(updateDto)))
+                .andExpect(status().isNotFound());
+    }
 
-    memberRepository.delete(entity);
-  }
+    @Test
+    @DisplayName("Update member without admin role")
+    void updateMemberWithoutAdminRole() throws Exception {
+        var updateDto = new UpdateMemberDto("test2", "test2", "1", Role.ADMIN, 10);
 
-  @Test
-  @DisplayName("Create member without admin role")
-  void createMemberWithoutAdminRole() throws Exception {
-    var member = new CreateMemberDto("test", "test", "", Role.USER);
+        if (token == null) loginWithUser("User2");
 
-    if (token == null) loginWithUser("User1");
+        mockMvc
+                .perform(
+                        put("/v1/members/" + new Random().nextInt())
+                                .header("Authorization", "Bearer " + token)
+                                .accept(MediaType.APPLICATION_JSON)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(updateDto)))
+                .andExpect(status().isForbidden());
+    }
 
-    mockMvc
-        .perform(
-            post("/v1/members")
-                .header("Authorization", "Bearer " + token)
-                .accept(MediaType.APPLICATION_JSON)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(member)))
-        .andExpect(status().isForbidden());
-  }
+    @Test
+    @DisplayName("Update member password")
+    void updateMemberPassword() throws Exception {
+        var entity =
+                memberRepository.save(
+                        MemberEntity.builder()
+                                .role(Role.USER)
+                                .phone("")
+                                .password("test")
+                                .name("test")
+                                .surname("test")
+                                .build());
+        var updateDto = new UpdatePasswordDto("test2");
 
-  @Test
-  @DisplayName("Update member")
-  void updateMember() throws Exception {
-    var entity =
-        memberRepository.save(
-            MemberEntity.builder()
-                .role(Role.USER)
-                .phone("")
-                .password("test")
-                .name("test")
-                .surname("test")
-                .build());
-    var updateDto = new UpdateMemberDto("test2", "test2", "1", Role.ADMIN, 10);
+        if (adminToken == null) loginWithAdmin();
 
-    if (adminToken == null) loginWithAdmin();
+        mockMvc
+                .perform(
+                        patch("/v1/members/" + entity.getId())
+                                .header("Authorization", "Bearer " + adminToken)
+                                .accept(MediaType.APPLICATION_JSON)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(updateDto)))
+                .andExpect(status().isOk());
 
-    mockMvc
-        .perform(
-            put("/v1/members/" + entity.getId())
-                .header("Authorization", "Bearer " + adminToken)
-                .accept(MediaType.APPLICATION_JSON)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(updateDto)))
-        .andExpect(status().isOk());
+        var entityUpdated =
+                memberRepository
+                        .findById(entity.getId())
+                        .orElseThrow(() -> new MemberNotFoundException(""));
+        Assertions.assertNotEquals("test", entityUpdated.getPassword());
 
-    var member = memberRepository.findByNameAndSurname("test2", "test2");
-    Assertions.assertTrue(member.isPresent());
-    Assertions.assertEquals(Role.ADMIN, member.get().getRole());
-    Assertions.assertEquals(10, member.get().getNCaptaincies());
-    Assertions.assertEquals("1", member.get().getPhone());
+        memberRepository.deleteById(entity.getId());
+    }
 
-    memberRepository.deleteById(entity.getId());
-  }
+    @Test
+    @DisplayName("Update password member doesn't exist")
+    void updatePasswordMemberNotExist() throws Exception {
+        var updateDto = new UpdatePasswordDto("test2");
 
-  @Test
-  @DisplayName("Update member doesn't exist")
-  void updateMemberNotExist() throws Exception {
-    var updateDto = new UpdateMemberDto("test2", "test2", "1", Role.ADMIN, 10);
+        if (adminToken == null) loginWithAdmin();
 
-    if (adminToken == null) loginWithAdmin();
+        mockMvc
+                .perform(
+                        patch("/v1/members/" + new Random().nextInt())
+                                .header("Authorization", "Bearer " + adminToken)
+                                .accept(MediaType.APPLICATION_JSON)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(updateDto)))
+                .andExpect(status().isNotFound());
+    }
 
-    mockMvc
-        .perform(
-            put("/v1/members/" + new Random().nextInt())
-                .header("Authorization", "Bearer " + adminToken)
-                .accept(MediaType.APPLICATION_JSON)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(updateDto)))
-        .andExpect(status().isNotFound());
-  }
+    @Test
+    @DisplayName("Update password member without admin role")
+    void updateMemberPasswordWithoutAdminRole() throws Exception {
+        var updateDto = new UpdatePasswordDto("test2");
 
-  @Test
-  @DisplayName("Update member without admin role")
-  void updateMemberWithoutAdminRole() throws Exception {
-    var updateDto = new UpdateMemberDto("test2", "test2", "1", Role.ADMIN, 10);
+        if (token == null) loginWithUser("User3");
 
-    if (token == null) loginWithUser("User2");
+        mockMvc
+                .perform(
+                        put("/v1/members/" + new Random().nextInt())
+                                .header("Authorization", "Bearer " + token)
+                                .accept(MediaType.APPLICATION_JSON)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(updateDto)))
+                .andExpect(status().isForbidden());
+    }
 
-    mockMvc
-        .perform(
-            put("/v1/members/" + new Random().nextInt())
-                .header("Authorization", "Bearer " + token)
-                .accept(MediaType.APPLICATION_JSON)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(updateDto)))
-        .andExpect(status().isForbidden());
-  }
+    @Test
+    @DisplayName("Update logged member password")
+    void updateLoggedMemberPassword() throws Exception {
+        var updateDto = new UpdatePasswordDto("test2");
 
-  @Test
-  @DisplayName("Update member password")
-  void updateMemberPassword() throws Exception {
-    var entity =
-        memberRepository.save(
-            MemberEntity.builder()
-                .role(Role.USER)
-                .phone("")
-                .password("test")
-                .name("test")
-                .surname("test")
-                .build());
-    var updateDto = new UpdatePasswordDto("test2");
+        if (token == null) loginWithUser("User4");
 
-    if (adminToken == null) loginWithAdmin();
+        var member =
+                memberRepository
+                        .findByNameAndSurname("User4", "User4")
+                        .orElseThrow(() -> new MemberNotFoundException(""));
 
-    mockMvc
-        .perform(
-            patch("/v1/members/" + entity.getId())
-                .header("Authorization", "Bearer " + adminToken)
-                .accept(MediaType.APPLICATION_JSON)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(updateDto)))
-        .andExpect(status().isOk());
+        mockMvc
+                .perform(
+                        patch("/v1/members/me/password")
+                                .header("Authorization", "Bearer " + token)
+                                .accept(MediaType.APPLICATION_JSON)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(updateDto)))
+                .andExpect(status().isOk());
 
-    var entityUpdated =
-        memberRepository
-            .findById(entity.getId())
-            .orElseThrow(() -> new MemberNotFoundException(""));
-    Assertions.assertNotEquals("test", entityUpdated.getPassword());
+        var entityUpdated =
+                memberRepository
+                        .findById(member.getId())
+                        .orElseThrow(() -> new MemberNotFoundException(""));
+        Assertions.assertNotEquals("test", entityUpdated.getPassword());
+    }
 
-    memberRepository.deleteById(entity.getId());
-  }
+    @Test
+    @DisplayName("Delete member")
+    void deleteMember() throws Exception {
+        var entity =
+                memberRepository.save(
+                        MemberEntity.builder()
+                                .role(Role.USER)
+                                .phone("")
+                                .password("test")
+                                .name("test")
+                                .surname("test")
+                                .build());
 
-  @Test
-  @DisplayName("Update password member doesn't exist")
-  void updatePasswordMemberNotExist() throws Exception {
-    var updateDto = new UpdatePasswordDto("test2");
+        if (adminToken == null) loginWithAdmin();
 
-    if (adminToken == null) loginWithAdmin();
+        mockMvc
+                .perform(
+                        delete("/v1/members/" + entity.getId())
+                                .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk());
 
-    mockMvc
-        .perform(
-            patch("/v1/members/" + new Random().nextInt())
-                .header("Authorization", "Bearer " + adminToken)
-                .accept(MediaType.APPLICATION_JSON)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(updateDto)))
-        .andExpect(status().isNotFound());
-  }
+        var member = memberRepository.findById(entity.getId());
+        Assertions.assertTrue(member.isEmpty());
 
-  @Test
-  @DisplayName("Update password member without admin role")
-  void updateMemberPasswordWithoutAdminRole() throws Exception {
-    var updateDto = new UpdatePasswordDto("test2");
+    }
 
-    if (token == null) loginWithUser("User3");
+    @Test
+    @DisplayName("Delete member no admin role")
+    void deleteMemberNotAdminRole() throws Exception {
+        var entity =
+                memberRepository.save(
+                        MemberEntity.builder()
+                                .role(Role.USER)
+                                .phone("")
+                                .password("test")
+                                .name("test")
+                                .surname("test")
+                                .build());
 
-    mockMvc
-        .perform(
-            put("/v1/members/" + new Random().nextInt())
-                .header("Authorization", "Bearer " + token)
-                .accept(MediaType.APPLICATION_JSON)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(updateDto)))
-        .andExpect(status().isForbidden());
-  }
+        if (token == null) loginWithUser("User6");
 
-  @Test
-  @DisplayName("Update logged member password")
-  void updateLoggedMemberPassword() throws Exception {
-    var updateDto = new UpdatePasswordDto("test2");
+        mockMvc
+                .perform(
+                        delete("/v1/members/" + entity.getId())
+                                .header("Authorization", "Bearer " + token))
+                .andExpect(status().isForbidden());
 
-    if (token == null) loginWithUser("User4");
-
-    var member =
-        memberRepository
-            .findByNameAndSurname("User4", "User4")
-            .orElseThrow(() -> new MemberNotFoundException(""));
-
-    mockMvc
-        .perform(
-            patch("/v1/members/me/password")
-                .header("Authorization", "Bearer " + token)
-                .accept(MediaType.APPLICATION_JSON)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(updateDto)))
-        .andExpect(status().isOk());
-
-    var entityUpdated =
-        memberRepository
-            .findById(member.getId())
-            .orElseThrow(() -> new MemberNotFoundException(""));
-    Assertions.assertNotEquals("test", entityUpdated.getPassword());
-  }
-
-  @Test
-  @DisplayName("Delete member")
-  void deleteMember() throws Exception {
-    var entity =
-            memberRepository.save(
-                    MemberEntity.builder()
-                            .role(Role.USER)
-                            .phone("")
-                            .password("test")
-                            .name("test")
-                            .surname("test")
-                            .build());
-
-    if (adminToken == null) loginWithAdmin();
-
-    mockMvc
-            .perform(
-                    delete("/v1/members/" + entity.getId())
-                            .header("Authorization", "Bearer " + adminToken))
-            .andExpect(status().isOk());
-
-    var member = memberRepository.findById(entity.getId());
-    Assertions.assertTrue(member.isEmpty());
-
-  }
-
-  @Test
-  @DisplayName("Delete member no admin role")
-  void deleteMemberNotAdminRole() throws Exception {
-    var entity =
-            memberRepository.save(
-                    MemberEntity.builder()
-                            .role(Role.USER)
-                            .phone("")
-                            .password("test")
-                            .name("test")
-                            .surname("test")
-                            .build());
-
-    if (token == null) loginWithUser("User6");
-
-    mockMvc
-            .perform(
-                    delete("/v1/members/" + entity.getId())
-                            .header("Authorization", "Bearer " + token))
-            .andExpect(status().isForbidden());
-
-  }
+    }
 }

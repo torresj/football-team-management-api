@@ -9,5 +9,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface MatchRepository extends JpaRepository<MatchEntity, Long> {
-    Optional<MatchEntity> findByMatchDayAfter(LocalDate date);
+    Optional<MatchEntity> findByMatchDayGreaterThanEqual(LocalDate date);
+    Optional<MatchEntity> findByMatchDay(LocalDate matchDay);
 }

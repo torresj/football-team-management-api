@@ -38,7 +38,7 @@ public class MatchServiceImpl implements MatchService {
   @Override
   public MatchDto getNext() throws NextMatchException {
     var match =
-        matchRepository.findByMatchDayAfter(LocalDate.now()).orElseThrow(NextMatchException::new);
+        matchRepository.findByMatchDayGreaterThanEqual(LocalDate.now()).orElseThrow(NextMatchException::new);
     return matchToDto(match);
   }
 
@@ -51,7 +51,7 @@ public class MatchServiceImpl implements MatchService {
 
   @Override
   public MatchDto create(LocalDate matchDay) throws MatchAlreadyExistsException {
-    var match = matchRepository.findByMatchDayAfter(LocalDate.now());
+    var match = matchRepository.findByMatchDayGreaterThanEqual(LocalDate.now());
     if (match.isPresent()) throw new MatchAlreadyExistsException(matchDay.toString());
     return matchToDto(
         matchRepository.save(
