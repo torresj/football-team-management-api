@@ -52,7 +52,7 @@ in [values.yaml](https://github.com/torresj/football-team-management-api/blob/ma
 
 ### Variable substitution
 
-Into [unseen-users chart folder](https://github.com/torresj/football-team-management-api/tree/main/src/main/helm/football-team-management-api) Certain
+Into [football-team-management-api chart folder](https://github.com/torresj/football-team-management-api/tree/main/src/main/helm/football-team-management-api) Certain
 values have been defined dynamically such as the version of the project. When you build the project with `maven`, a new
 folder `target` is created and inside a new helm folder is generated with all the variables correctly substituted
 in `target/helm/football-team-management-api`
@@ -60,5 +60,5 @@ in `target/helm/football-team-management-api`
 ## Copyright
 
 Released under the GNU General Public License V3.0. See
-the [LICENSE](https://github.com/torresj/unseen-auth/blob/main/LICENSE) file.
+the [LICENSE](https://github.com/torresj/football-team-management-api/blob/main/LICENSE) file.
 
