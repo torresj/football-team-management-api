@@ -1,9 +1,7 @@
 package com.torresj.footballteammanagementapi.controllers;
 
 import com.torresj.footballteammanagementapi.dtos.CreateMatchDto;
-import com.torresj.footballteammanagementapi.dtos.CreateMemberDto;
 import com.torresj.footballteammanagementapi.dtos.MatchDto;
-import com.torresj.footballteammanagementapi.dtos.MemberDto;
 import com.torresj.footballteammanagementapi.exceptions.*;
 import com.torresj.footballteammanagementapi.services.MatchService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -135,5 +133,28 @@ public class MatchController {
                                 .build()
                                 .toUri())
                 .build();
+    }
+
+    @Secured("ROLE_ADMIN")
+    @PostMapping("/{id}/close")
+    @SecurityRequirement(name = "Bearer Authentication")
+    @Operation(summary = "Close match by ID")
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Match closed",
+                            content = {@Content()}),
+                    @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content),
+                    @ApiResponse(responseCode = "403", description = "Forbidden", content = @Content),
+                    @ApiResponse(responseCode = "404", description = "Not found", content = @Content),
+            })
+    @SecurityRequirement(name = "Bearer Authentication")
+    ResponseEntity<Void> close(@Parameter(description = "Match id") @PathVariable long id)
+            throws MatchNotFoundException {
+        log.info("[MATCHES] Closing match " + id);
+        matchService.close(id);
+        log.info("[MATCHES] Match closed");
+        return ResponseEntity.ok().build();
     }
 }

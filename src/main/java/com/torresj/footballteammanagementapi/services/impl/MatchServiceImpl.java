@@ -4,12 +4,16 @@ import com.torresj.footballteammanagementapi.dtos.MatchDto;
 import com.torresj.footballteammanagementapi.dtos.MatchPlayer;
 import com.torresj.footballteammanagementapi.entities.MatchEntity;
 import com.torresj.footballteammanagementapi.entities.MemberEntity;
+import com.torresj.footballteammanagementapi.entities.MovementEntity;
+import com.torresj.footballteammanagementapi.enums.MovementType;
 import com.torresj.footballteammanagementapi.enums.PlayerMatchStatus;
 import com.torresj.footballteammanagementapi.exceptions.*;
 import com.torresj.footballteammanagementapi.repositories.MatchRepository;
 import com.torresj.footballteammanagementapi.repositories.MemberRepository;
+import com.torresj.footballteammanagementapi.repositories.MovementRepository;
 import com.torresj.footballteammanagementapi.services.MatchService;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -25,6 +29,7 @@ public class MatchServiceImpl implements MatchService {
 
   private final MemberRepository memberRepository;
   private final MatchRepository matchRepository;
+  private final MovementRepository movementRepository;
 
   @Value("${admin.user}")
   private final String adminUser;
@@ -76,6 +81,15 @@ public class MatchServiceImpl implements MatchService {
     var match = matchRepository.findById(id).orElseThrow(()->new MatchNotFoundException(id));
     match.setClosed(true);
     matchRepository.save(match);
+    match.getNotAvailablePlayers().stream()
+            .map(player -> MovementEntity.builder()
+                    .type(MovementType.EXPENSE)
+                    .amount(-1)
+                    .description("Multa por no ir al partido del "
+                            + match.getMatchDay().format(DateTimeFormatter.BASIC_ISO_DATE))
+                    .memberId(player)
+                    .build())
+            .forEach(movementRepository::save);
   }
 
   @Override

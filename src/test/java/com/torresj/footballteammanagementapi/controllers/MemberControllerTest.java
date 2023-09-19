@@ -143,7 +143,7 @@ public class MemberControllerTest {
 
         var content = result.andReturn().getResponse().getContentAsString();
         List<MemberDto> members =
-                objectMapper.readValue(content, new TypeReference<List<MemberDto>>() {
+                objectMapper.readValue(content, new TypeReference<>() {
                 });
 
         Assertions.assertTrue(members.size() >= 2);
@@ -232,7 +232,7 @@ public class MemberControllerTest {
 
         var movementContent = movementResults.andReturn().getResponse().getContentAsString();
         List<MovementDto> movements =
-                objectMapper.readValue(movementContent, new TypeReference<List<MovementDto>>() {
+                objectMapper.readValue(movementContent, new TypeReference<>() {
                 });
 
         var memberContent = memberResult.andReturn().getResponse().getContentAsString();
@@ -252,13 +252,13 @@ public class MemberControllerTest {
         movementRepository.saveAll(
                 List.of(
                         MovementEntity.builder()
-                                .memberId(10)
+                                .memberId(123456)
                                 .type(MovementType.EXPENSE)
                                 .description("")
                                 .amount(-30)
                                 .build(),
                         MovementEntity.builder()
-                                .memberId(10)
+                                .memberId(123456)
                                 .type(MovementType.INCOME)
                                 .description("")
                                 .amount(20)
@@ -267,7 +267,7 @@ public class MemberControllerTest {
         if (adminToken == null) loginWithAdmin();
 
         mockMvc
-                .perform(get("/v1/members/10/movements").header("Authorization", "Bearer " + adminToken))
+                .perform(get("/v1/members/123456/movements").header("Authorization", "Bearer " + adminToken))
                 .andExpect(status().isNotFound());
 
         movementRepository.deleteAll();

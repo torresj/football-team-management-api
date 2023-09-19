@@ -6,9 +6,11 @@ import com.torresj.footballteammanagementapi.dtos.*;
 import com.torresj.footballteammanagementapi.entities.MatchEntity;
 import com.torresj.footballteammanagementapi.entities.MemberEntity;
 import com.torresj.footballteammanagementapi.enums.Role;
+import com.torresj.footballteammanagementapi.exceptions.MatchNotFoundException;
 import com.torresj.footballteammanagementapi.exceptions.MemberNotFoundException;
 import com.torresj.footballteammanagementapi.repositories.MatchRepository;
 import com.torresj.footballteammanagementapi.repositories.MemberRepository;
+import com.torresj.footballteammanagementapi.repositories.MovementRepository;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -47,6 +49,9 @@ public class MatchControllerTest {
 
     @Autowired
     private MatchRepository matchRepository;
+
+    @Autowired
+    private MovementRepository movementRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -367,6 +372,78 @@ public class MatchControllerTest {
                                 .accept(MediaType.APPLICATION_JSON)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(match)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("Close match")
+    void closeMatch() throws Exception {
+
+        var players = new HashSet<Long>();
+
+        players.add(1234L);
+        players.add(1235L);
+
+        var match =
+                matchRepository.save(MatchEntity.builder()
+                        .matchDay(LocalDate.now().minusDays(7))
+                        .confirmedPlayers(new HashSet<>())
+                        .notAvailablePlayers(players)
+                        .unConfirmedPlayers(
+                                memberRepository.findAll().stream()
+                                        .filter(memberEntity -> adminUser.equals(memberEntity.getName()))
+                                        .map(MemberEntity::getId).collect(Collectors.toSet()))
+                        .teamAPlayers(new ArrayList<>())
+                        .teamBPlayers(new ArrayList<>())
+                        .teamAGuests(new ArrayList<>())
+                        .teamBGuests(new ArrayList<>())
+                        .closed(false)
+                        .build());
+
+        if (adminToken == null) loginWithAdmin();
+
+        mockMvc
+                .perform(
+                        post("/v1/matches/" + match.getId() + "/close")
+                                .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk());
+
+        var matchClosed = matchRepository
+                .findById(match.getId()).orElseThrow(() -> new MatchNotFoundException(match.getId()));
+
+        Assertions.assertTrue(matchClosed.isClosed());
+
+        for(long player: match.getNotAvailablePlayers()){
+            Assertions.assertFalse(movementRepository.findByMemberId(player).isEmpty());
+        }
+
+        movementRepository.deleteAll();
+        matchRepository.delete(matchClosed);
+    }
+
+    @Test
+    @DisplayName("Close match that doesn't exist")
+    void closeMatchNotExists() throws Exception {
+
+        if (adminToken == null) loginWithAdmin();
+
+        mockMvc
+                .perform(
+                        post("/v1/matches/1234/close")
+                                .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("Close match without admin role")
+    void closeMatchNoAdminRole() throws Exception {
+
+        if (token == null) loginWithUser("MatchUser7");
+
+        mockMvc
+                .perform(
+                        post("/v1/matches/1234/close")
+                                .header("Authorization", "Bearer " + token))
                 .andExpect(status().isForbidden());
     }
 }

@@ -147,7 +147,7 @@ public class MovementControllerTest {
 
         var content = result.andReturn().getResponse().getContentAsString();
         List<MovementDto> movements =
-                objectMapper.readValue(content, new TypeReference<List<MovementDto>>() {
+                objectMapper.readValue(content, new TypeReference<>() {
                 });
 
         Assertions.assertTrue(movements.size() >= 4);
@@ -223,7 +223,7 @@ public class MovementControllerTest {
     @Test
     @DisplayName("Create movement user not found")
     void createMovementUserNotFound() throws Exception {
-        var movement = new CreateMovementDto(MovementType.EXPENSE, 10, -10, "");
+        var movement = new CreateMovementDto(MovementType.EXPENSE, 12345, -10, "");
 
         if (adminToken == null) loginWithAdmin();
 
