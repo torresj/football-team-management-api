@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.torresj.footballteammanagementapi.dtos.*;
 import com.torresj.footballteammanagementapi.entities.MatchEntity;
 import com.torresj.footballteammanagementapi.entities.MemberEntity;
+import com.torresj.footballteammanagementapi.enums.PlayerMatchStatus;
 import com.torresj.footballteammanagementapi.enums.Role;
 import com.torresj.footballteammanagementapi.exceptions.MatchNotFoundException;
 import com.torresj.footballteammanagementapi.exceptions.MemberNotFoundException;
@@ -413,7 +414,7 @@ public class MatchControllerTest {
 
         Assertions.assertTrue(matchClosed.isClosed());
 
-        for(long player: match.getNotAvailablePlayers()){
+        for (long player : match.getNotAvailablePlayers()) {
             Assertions.assertFalse(movementRepository.findByMemberId(player).isEmpty());
         }
 
@@ -445,5 +446,112 @@ public class MatchControllerTest {
                         post("/v1/matches/1234/close")
                                 .header("Authorization", "Bearer " + token))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("Add player available")
+    void addPlayer() throws Exception {
+
+        if (token == null) loginWithUser("player");
+
+        var match =
+                matchRepository.save(MatchEntity.builder()
+                        .matchDay(LocalDate.now().plusDays(7))
+                        .confirmedPlayers(new HashSet<>())
+                        .notAvailablePlayers(new HashSet<>())
+                        .unConfirmedPlayers(
+                                memberRepository.findAll().stream()
+                                        .filter(memberEntity -> !adminUser.equals(memberEntity.getName()))
+                                        .map(MemberEntity::getId).collect(Collectors.toSet()))
+                        .teamAPlayers(new ArrayList<>())
+                        .teamBPlayers(new ArrayList<>())
+                        .teamAGuests(new ArrayList<>())
+                        .teamBGuests(new ArrayList<>())
+                        .closed(false)
+                        .build());
+
+        var request = new AddPlayerRequest(PlayerMatchStatus.AVAILABLE);
+
+        mockMvc
+                .perform(
+                        post("/v1/matches/" + match.getId() + "/player")
+                                .header("Authorization", "Bearer " + token)
+                                .accept(MediaType.APPLICATION_JSON)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk());
+
+        var matchFromDB = matchRepository.findById(match.getId());
+        var player = memberRepository.findByNameAndSurname("player","player");
+
+        Assertions.assertTrue(matchFromDB.get().getConfirmedPlayers().contains(player.get().getId()));
+        Assertions.assertFalse(matchFromDB.get().getUnConfirmedPlayers().contains(player.get().getId()));
+
+        matchRepository.delete(matchFromDB.get());
+        memberRepository.delete(player.get());
+    }
+
+    @Test
+    @DisplayName("Add player not available")
+    void addPlayerNotAvailable() throws Exception {
+
+        if (token == null) loginWithUser("player");
+
+        var match =
+                matchRepository.save(MatchEntity.builder()
+                        .matchDay(LocalDate.now().plusDays(7))
+                        .confirmedPlayers(new HashSet<>())
+                        .notAvailablePlayers(new HashSet<>())
+                        .unConfirmedPlayers(
+                                memberRepository.findAll().stream()
+                                        .filter(memberEntity -> !adminUser.equals(memberEntity.getName()))
+                                        .map(MemberEntity::getId).collect(Collectors.toSet()))
+                        .teamAPlayers(new ArrayList<>())
+                        .teamBPlayers(new ArrayList<>())
+                        .teamAGuests(new ArrayList<>())
+                        .teamBGuests(new ArrayList<>())
+                        .closed(false)
+                        .build());
+
+        var request = new AddPlayerRequest(PlayerMatchStatus.NOT_AVAILABLE);
+
+        mockMvc
+                .perform(
+                        post("/v1/matches/" + match.getId() + "/player")
+                                .header("Authorization", "Bearer " + token)
+                                .accept(MediaType.APPLICATION_JSON)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk());
+
+        var matchFromDB = matchRepository.findById(match.getId());
+        var player = memberRepository.findByNameAndSurname("player","player");
+
+        Assertions.assertTrue(matchFromDB.get().getNotAvailablePlayers().contains(player.get().getId()));
+        Assertions.assertFalse(matchFromDB.get().getUnConfirmedPlayers().contains(player.get().getId()));
+
+        matchRepository.delete(matchFromDB.get());
+        memberRepository.delete(player.get());
+    }
+
+    @Test
+    @DisplayName("Add player match not exists")
+    void addPlayerMatchNotExists() throws Exception {
+
+        if (token == null) loginWithUser("player");
+
+        var request = new AddPlayerRequest(PlayerMatchStatus.NOT_AVAILABLE);
+
+        mockMvc
+                .perform(
+                        post("/v1/matches/1234/player")
+                                .header("Authorization", "Bearer " + token)
+                                .accept(MediaType.APPLICATION_JSON)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNotFound());
+
+        var player = memberRepository.findByNameAndSurname("player","player");
+        memberRepository.delete(player.get());
     }
 }

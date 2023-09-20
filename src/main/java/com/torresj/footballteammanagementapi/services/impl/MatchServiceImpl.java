@@ -66,7 +66,7 @@ public class MatchServiceImpl implements MatchService {
                 .notAvailablePlayers(new HashSet<>())
                 .unConfirmedPlayers(
                     memberRepository.findAll().stream()
-                        .filter(memberEntity -> adminUser.equals(memberEntity.getName()))
+                        .filter(memberEntity -> !adminUser.equals(memberEntity.getName()))
                         .map(MemberEntity::getId).collect(Collectors.toSet()))
                 .teamAPlayers(new ArrayList<>())
                 .teamBPlayers(new ArrayList<>())
@@ -120,6 +120,7 @@ public class MatchServiceImpl implements MatchService {
       }
     }
 
+    matchRepository.save(match);
   }
 
   @Override

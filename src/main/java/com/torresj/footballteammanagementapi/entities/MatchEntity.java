@@ -21,25 +21,25 @@ public class MatchEntity {
     @Column(columnDefinition = "DATE")
     private LocalDate matchDay;
 
-    @ElementCollection(targetClass = Long.class)
+    @ElementCollection(targetClass = Long.class, fetch = FetchType.EAGER)
     private Set<Long> confirmedPlayers;
 
-    @ElementCollection(targetClass = Long.class)
+    @ElementCollection(targetClass = Long.class, fetch = FetchType.EAGER)
     private Set<Long> unConfirmedPlayers;
 
-    @ElementCollection(targetClass = Long.class)
+    @ElementCollection(targetClass = Long.class, fetch = FetchType.EAGER)
     private Set<Long> notAvailablePlayers;
 
-    @ElementCollection(targetClass = Long.class)
+    @ElementCollection(targetClass = Long.class, fetch = FetchType.EAGER)
     private List<Long> teamAPlayers;
 
-    @ElementCollection(targetClass = Long.class)
+    @ElementCollection(targetClass = Long.class, fetch = FetchType.EAGER)
     private List<Long> teamBPlayers;
 
-    @ElementCollection(targetClass = String.class)
+    @ElementCollection(targetClass = String.class, fetch = FetchType.EAGER)
     private List<String> teamAGuests;
 
-    @ElementCollection(targetClass = String.class)
+    @ElementCollection(targetClass = String.class, fetch = FetchType.EAGER)
     private List<String> teamBGuests;
 
     @Column

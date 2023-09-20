@@ -1,5 +1,6 @@
 package com.torresj.footballteammanagementapi.controllers;
 
+import com.torresj.footballteammanagementapi.dtos.AddPlayerRequest;
 import com.torresj.footballteammanagementapi.dtos.CreateMatchDto;
 import com.torresj.footballteammanagementapi.dtos.MatchDto;
 import com.torresj.footballteammanagementapi.exceptions.*;
@@ -19,6 +20,7 @@ import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.security.Principal;
 import java.util.List;
 
 @RestController
@@ -155,6 +157,33 @@ public class MatchController {
         log.info("[MATCHES] Closing match " + id);
         matchService.close(id);
         log.info("[MATCHES] Match closed");
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{id}/player")
+    @SecurityRequirement(name = "Bearer Authentication")
+    @Operation(summary = "Add logged player to match by ID")
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Player added",
+                            content = {@Content()}),
+                    @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content),
+                    @ApiResponse(responseCode = "403", description = "Forbidden", content = @Content),
+                    @ApiResponse(responseCode = "404", description = "Not found", content = @Content),
+            })
+    @SecurityRequirement(name = "Bearer Authentication")
+    ResponseEntity<Void> addPlayer(@Parameter(description = "Match id") @PathVariable long id,
+                                   @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                                    description = "Player status for this match",
+                                    required = true,
+                                    content = @Content(schema = @Schema(implementation = AddPlayerRequest.class)))
+    @RequestBody AddPlayerRequest request, Principal principal)
+            throws MatchNotFoundException, MemberNotFoundException {
+        log.info("[MATCHES] Adding player " + principal.getName() + " to match " + id);
+        matchService.addPlayer(id,request.status(),principal.getName());
+        log.info("[MATCHES] Player added");
         return ResponseEntity.ok().build();
     }
 }
