@@ -862,4 +862,94 @@ public class MatchControllerTest {
                 .andExpect(status().isForbidden());
 
     }
+
+    @Test
+    @DisplayName("Remove player from team A")
+    void removePlayerFromTeamA() throws Exception {
+
+        if (adminToken == null) loginWithAdmin();
+
+        var player = memberRepository.save(MemberEntity.builder()
+                .name("player")
+                .surname("test")
+                .password("test")
+                .phone("")
+                .role(Role.USER)
+                .build());
+
+        var players = new ArrayList<Long>();
+        players.add(player.getId());
+
+        var match =
+                matchRepository.save(MatchEntity.builder()
+                        .matchDay(LocalDate.now().plusDays(7))
+                        .confirmedPlayers(new HashSet<>())
+                        .notAvailablePlayers(new HashSet<>())
+                        .unConfirmedPlayers(new HashSet<>())
+                        .teamAPlayers(players)
+                        .teamBPlayers(new ArrayList<>())
+                        .teamAGuests(new ArrayList<>())
+                        .teamBGuests(new ArrayList<>())
+                        .closed(false)
+                        .build());
+
+        mockMvc
+                .perform(
+                        delete("/v1/matches/" + match.getId() + "/players/" + player.getId() + "/teama")
+                                .header("Authorization", "Bearer " + adminToken)
+                                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        var matchFromDB = matchRepository.findById(match.getId());
+
+        Assertions.assertFalse(matchFromDB.get().getTeamAPlayers().contains(player.getId()));
+
+        matchRepository.deleteAll();
+        memberRepository.delete(player);
+    }
+
+    @Test
+    @DisplayName("Remove player from team B")
+    void removePlayerFromTeamB() throws Exception {
+
+        if (adminToken == null) loginWithAdmin();
+
+        var player = memberRepository.save(MemberEntity.builder()
+                .name("player")
+                .surname("test")
+                .password("test")
+                .phone("")
+                .role(Role.USER)
+                .build());
+
+        var players = new ArrayList<Long>();
+        players.add(player.getId());
+
+        var match =
+                matchRepository.save(MatchEntity.builder()
+                        .matchDay(LocalDate.now().plusDays(7))
+                        .confirmedPlayers(new HashSet<>())
+                        .notAvailablePlayers(new HashSet<>())
+                        .unConfirmedPlayers(new HashSet<>())
+                        .teamAPlayers(new ArrayList<>())
+                        .teamBPlayers(players)
+                        .teamAGuests(new ArrayList<>())
+                        .teamBGuests(new ArrayList<>())
+                        .closed(false)
+                        .build());
+
+        mockMvc
+                .perform(
+                        delete("/v1/matches/" + match.getId() + "/players/" + player.getId() + "/teamb")
+                                .header("Authorization", "Bearer " + adminToken)
+                                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        var matchFromDB = matchRepository.findById(match.getId());
+
+        Assertions.assertFalse(matchFromDB.get().getTeamBPlayers().contains(player.getId()));
+
+        matchRepository.deleteAll();
+        memberRepository.delete(player);
+    }
 }

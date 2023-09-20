@@ -236,4 +236,54 @@ public class MatchController {
         log.info("[MATCHES] Player added");
         return ResponseEntity.ok().build();
     }
+
+    @Secured("ROLE_ADMIN")
+    @DeleteMapping("/{matchId}/players/{playerId}/teama")
+    @SecurityRequirement(name = "Bearer Authentication")
+    @Operation(summary = "Delete player from team A")
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Player removed",
+                            content = {@Content()}),
+                    @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content),
+                    @ApiResponse(responseCode = "403", description = "Forbidden", content = @Content),
+                    @ApiResponse(responseCode = "404", description = "Not found", content = @Content),
+            })
+    @SecurityRequirement(name = "Bearer Authentication")
+    ResponseEntity<Void> deletePlayerFromTeamA(
+            @Parameter(description = "Match id") @PathVariable long matchId,
+            @Parameter(description = "Player id") @PathVariable long playerId)
+            throws MatchNotFoundException {
+        log.info("[MATCHES] Removing player " + playerId + " from team A");
+        matchService.removePlayerFromTeamA(matchId,playerId);
+        log.info("[MATCHES] Player removed");
+        return ResponseEntity.ok().build();
+    }
+
+    @Secured("ROLE_ADMIN")
+    @DeleteMapping("/{matchId}/players/{playerId}/teamb")
+    @SecurityRequirement(name = "Bearer Authentication")
+    @Operation(summary = "Delete player from team B")
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Player removed",
+                            content = {@Content()}),
+                    @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content),
+                    @ApiResponse(responseCode = "403", description = "Forbidden", content = @Content),
+                    @ApiResponse(responseCode = "404", description = "Not found", content = @Content),
+            })
+    @SecurityRequirement(name = "Bearer Authentication")
+    ResponseEntity<Void> deletePlayerFromTeamB(
+            @Parameter(description = "Match id") @PathVariable long matchId,
+            @Parameter(description = "Player id") @PathVariable long playerId)
+            throws MatchNotFoundException {
+        log.info("[MATCHES] Removing player " + playerId + " from team B");
+        matchService.removePlayerFromTeamB(matchId,playerId);
+        log.info("[MATCHES] Player removed");
+        return ResponseEntity.ok().build();
+    }
 }
