@@ -160,7 +160,7 @@ public class MatchController {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/{id}/player")
+    @PostMapping("/{id}/players")
     @SecurityRequirement(name = "Bearer Authentication")
     @Operation(summary = "Add logged player to match by ID")
     @ApiResponses(
@@ -183,6 +183,56 @@ public class MatchController {
             throws MatchNotFoundException, MemberNotFoundException {
         log.info("[MATCHES] Adding player " + principal.getName() + " to match " + id);
         matchService.addPlayer(id,request.status(),principal.getName());
+        log.info("[MATCHES] Player added");
+        return ResponseEntity.ok().build();
+    }
+
+    @Secured("ROLE_ADMIN")
+    @PostMapping("/{matchId}/players/{playerId}/teama")
+    @SecurityRequirement(name = "Bearer Authentication")
+    @Operation(summary = "Add player to team A")
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Player added",
+                            content = {@Content()}),
+                    @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content),
+                    @ApiResponse(responseCode = "403", description = "Forbidden", content = @Content),
+                    @ApiResponse(responseCode = "404", description = "Not found", content = @Content),
+            })
+    @SecurityRequirement(name = "Bearer Authentication")
+    ResponseEntity<Void> addPlayerToTeamA(
+            @Parameter(description = "Match id") @PathVariable long matchId,
+            @Parameter(description = "Player id") @PathVariable long playerId)
+            throws MatchNotFoundException, MemberNotFoundException, PlayerUnavailableException {
+        log.info("[MATCHES] Adding player " + playerId + " to team A");
+        matchService.addPlayerToTeamA(matchId,playerId);
+        log.info("[MATCHES] Player added");
+        return ResponseEntity.ok().build();
+    }
+
+    @Secured("ROLE_ADMIN")
+    @PostMapping("/{matchId}/players/{playerId}/teamb")
+    @SecurityRequirement(name = "Bearer Authentication")
+    @Operation(summary = "Add player to team B")
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Player added",
+                            content = {@Content()}),
+                    @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content),
+                    @ApiResponse(responseCode = "403", description = "Forbidden", content = @Content),
+                    @ApiResponse(responseCode = "404", description = "Not found", content = @Content),
+            })
+    @SecurityRequirement(name = "Bearer Authentication")
+    ResponseEntity<Void> addPlayerToTeamB(
+            @Parameter(description = "Match id") @PathVariable long matchId,
+            @Parameter(description = "Player id") @PathVariable long playerId)
+            throws MatchNotFoundException, MemberNotFoundException, PlayerUnavailableException {
+        log.info("[MATCHES] Adding player " + playerId + " to team B");
+        matchService.addPlayerToTeamB(matchId,playerId);
         log.info("[MATCHES] Player added");
         return ResponseEntity.ok().build();
     }

@@ -12,9 +12,7 @@ import com.torresj.footballteammanagementapi.exceptions.MemberNotFoundException;
 import com.torresj.footballteammanagementapi.repositories.MatchRepository;
 import com.torresj.footballteammanagementapi.repositories.MemberRepository;
 import com.torresj.footballteammanagementapi.repositories.MovementRepository;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -198,7 +196,7 @@ public class MatchControllerTest {
                                 .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk());
 
-        matchRepository.delete(matchEntity);
+        matchRepository.deleteAll();
     }
 
     @Test
@@ -258,7 +256,7 @@ public class MatchControllerTest {
 
         Assertions.assertEquals(matches.get(0).getMatchDay(), match.matchDay());
 
-        matchRepository.deleteAll(matches);
+        matchRepository.deleteAll();
     }
 
     @Test
@@ -301,7 +299,7 @@ public class MatchControllerTest {
                                 .header("Authorization", "Bearer " + token))
                 .andExpect(status().isNotFound());
 
-        matchRepository.deleteAll(matches);
+        matchRepository.deleteAll();
     }
 
     @Test
@@ -322,7 +320,7 @@ public class MatchControllerTest {
 
         Assertions.assertTrue(matchRepository.findByMatchDay(match.matchDay()).isPresent());
 
-        matchRepository.delete(matchRepository.findByMatchDay(match.matchDay()).get());
+        matchRepository.deleteAll();
     }
 
     @Test
@@ -356,7 +354,7 @@ public class MatchControllerTest {
                                 .content(objectMapper.writeValueAsString(match)))
                 .andExpect(status().isBadRequest());
 
-        matchRepository.delete(matchInDb);
+        matchRepository.deleteAll();
     }
 
     @Test
@@ -419,7 +417,7 @@ public class MatchControllerTest {
         }
 
         movementRepository.deleteAll();
-        matchRepository.delete(matchClosed);
+        matchRepository.deleteAll();
     }
 
     @Test
@@ -452,7 +450,7 @@ public class MatchControllerTest {
     @DisplayName("Add player available")
     void addPlayer() throws Exception {
 
-        if (token == null) loginWithUser("player");
+        if (token == null) loginWithUser("MatchUser8");
 
         var match =
                 matchRepository.save(MatchEntity.builder()
@@ -474,7 +472,7 @@ public class MatchControllerTest {
 
         mockMvc
                 .perform(
-                        post("/v1/matches/" + match.getId() + "/player")
+                        post("/v1/matches/" + match.getId() + "/players")
                                 .header("Authorization", "Bearer " + token)
                                 .accept(MediaType.APPLICATION_JSON)
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -482,20 +480,19 @@ public class MatchControllerTest {
                 .andExpect(status().isOk());
 
         var matchFromDB = matchRepository.findById(match.getId());
-        var player = memberRepository.findByNameAndSurname("player","player");
+        var player = memberRepository.findByNameAndSurname("MatchUser8", "MatchUser8");
 
         Assertions.assertTrue(matchFromDB.get().getConfirmedPlayers().contains(player.get().getId()));
         Assertions.assertFalse(matchFromDB.get().getUnConfirmedPlayers().contains(player.get().getId()));
 
-        matchRepository.delete(matchFromDB.get());
-        memberRepository.delete(player.get());
+        matchRepository.deleteAll();
     }
 
     @Test
     @DisplayName("Add player not available")
     void addPlayerNotAvailable() throws Exception {
 
-        if (token == null) loginWithUser("player");
+        if (token == null) loginWithUser("MatchUser9");
 
         var match =
                 matchRepository.save(MatchEntity.builder()
@@ -517,7 +514,7 @@ public class MatchControllerTest {
 
         mockMvc
                 .perform(
-                        post("/v1/matches/" + match.getId() + "/player")
+                        post("/v1/matches/" + match.getId() + "/players")
                                 .header("Authorization", "Bearer " + token)
                                 .accept(MediaType.APPLICATION_JSON)
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -525,33 +522,344 @@ public class MatchControllerTest {
                 .andExpect(status().isOk());
 
         var matchFromDB = matchRepository.findById(match.getId());
-        var player = memberRepository.findByNameAndSurname("player","player");
+        var player = memberRepository.findByNameAndSurname("MatchUser9", "MatchUser9");
 
         Assertions.assertTrue(matchFromDB.get().getNotAvailablePlayers().contains(player.get().getId()));
         Assertions.assertFalse(matchFromDB.get().getUnConfirmedPlayers().contains(player.get().getId()));
 
-        matchRepository.delete(matchFromDB.get());
-        memberRepository.delete(player.get());
+        matchRepository.deleteAll();
     }
 
     @Test
     @DisplayName("Add player match not exists")
     void addPlayerMatchNotExists() throws Exception {
 
-        if (token == null) loginWithUser("player");
+        if (token == null) loginWithUser("MatchUser10");
 
         var request = new AddPlayerRequest(PlayerMatchStatus.NOT_AVAILABLE);
 
         mockMvc
                 .perform(
-                        post("/v1/matches/1234/player")
+                        post("/v1/matches/1234/players")
                                 .header("Authorization", "Bearer " + token)
                                 .accept(MediaType.APPLICATION_JSON)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNotFound());
 
-        var player = memberRepository.findByNameAndSurname("player","player");
+        var player = memberRepository.findByNameAndSurname("MatchUser10", "MatchUser10");
         memberRepository.delete(player.get());
+    }
+
+    @Test
+    @DisplayName("Add player to team A")
+    void addPlayerTeamA() throws Exception {
+
+        if (adminToken == null) loginWithAdmin();
+
+        var player = memberRepository.save(MemberEntity.builder()
+                .name("player")
+                .surname("test")
+                .password("test")
+                .phone("")
+                .role(Role.USER)
+                .build());
+
+        var players = new HashSet<Long>();
+        players.add(player.getId());
+
+        var match =
+                matchRepository.save(MatchEntity.builder()
+                        .matchDay(LocalDate.now().plusDays(7))
+                        .confirmedPlayers(players)
+                        .notAvailablePlayers(new HashSet<>())
+                        .unConfirmedPlayers(new HashSet<>())
+                        .teamAPlayers(new ArrayList<>())
+                        .teamBPlayers(new ArrayList<>())
+                        .teamAGuests(new ArrayList<>())
+                        .teamBGuests(new ArrayList<>())
+                        .closed(false)
+                        .build());
+
+        mockMvc
+                .perform(
+                        post("/v1/matches/" + match.getId() + "/players/" + player.getId() + "/teama")
+                                .header("Authorization", "Bearer " + adminToken)
+                                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        var matchFromDB = matchRepository.findById(match.getId());
+
+        Assertions.assertTrue(matchFromDB.get().getTeamAPlayers().contains(player.getId()));
+
+        matchRepository.deleteAll();
+        memberRepository.delete(player);
+    }
+
+    @Test
+    @DisplayName("Add player to team A not available")
+    void addPlayerTeamANotAvailable() throws Exception {
+
+        if (adminToken == null) loginWithAdmin();
+
+        var player = memberRepository.save(MemberEntity.builder()
+                .name("player")
+                .surname("test")
+                .password("test")
+                .phone("")
+                .role(Role.USER)
+                .build());
+
+        var players = new HashSet<Long>();
+        players.add(player.getId());
+
+        var match =
+                matchRepository.save(MatchEntity.builder()
+                        .matchDay(LocalDate.now().plusDays(7))
+                        .confirmedPlayers(new HashSet<>())
+                        .notAvailablePlayers(players)
+                        .unConfirmedPlayers(new HashSet<>())
+                        .teamAPlayers(new ArrayList<>())
+                        .teamBPlayers(new ArrayList<>())
+                        .teamAGuests(new ArrayList<>())
+                        .teamBGuests(new ArrayList<>())
+                        .closed(false)
+                        .build());
+
+        mockMvc
+                .perform(
+                        post("/v1/matches/" + match.getId() + "/players/" + player.getId() + "/teama")
+                                .header("Authorization", "Bearer " + adminToken)
+                                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+
+        matchRepository.deleteAll();
+        memberRepository.delete(player);
+    }
+
+    @Test
+    @DisplayName("Add player to team A player doesn't exist")
+    void addPlayerTeamAPlayerNotExist() throws Exception {
+
+        if (adminToken == null) loginWithAdmin();
+
+        var players = new HashSet<Long>();
+
+        var match =
+                matchRepository.save(MatchEntity.builder()
+                        .matchDay(LocalDate.now().plusDays(7))
+                        .confirmedPlayers(new HashSet<>())
+                        .notAvailablePlayers(players)
+                        .unConfirmedPlayers(new HashSet<>())
+                        .teamAPlayers(new ArrayList<>())
+                        .teamBPlayers(new ArrayList<>())
+                        .teamAGuests(new ArrayList<>())
+                        .teamBGuests(new ArrayList<>())
+                        .closed(false)
+                        .build());
+
+        mockMvc
+                .perform(
+                        post("/v1/matches/" + match.getId() + "/players/1234/teama")
+                                .header("Authorization", "Bearer " + adminToken)
+                                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+
+        matchRepository.deleteAll();
+    }
+
+    @Test
+    @DisplayName("Add player to team A match doesn't exist")
+    void addPlayerTeamAMatchNotExist() throws Exception {
+
+        if (adminToken == null) loginWithAdmin();
+
+        var player = memberRepository.save(MemberEntity.builder()
+                .name("player")
+                .surname("test")
+                .password("test")
+                .phone("")
+                .role(Role.USER)
+                .build());
+
+        mockMvc
+                .perform(
+                        post("/v1/matches/1234/players/" + player.getId() + "/teama")
+                                .header("Authorization", "Bearer " + adminToken)
+                                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+
+        memberRepository.delete(player);
+    }
+
+    @Test
+    @DisplayName("Add player to team A without admin role")
+    void addPlayerTeamANoAdminRole() throws Exception {
+
+        if (token == null) loginWithUser("MatchUser11");
+
+        mockMvc
+                .perform(
+                        post("/v1/matches/1234/players/1234/teama")
+                                .header("Authorization", "Bearer " + token)
+                                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isForbidden());
+
+    }
+
+    @Test
+    @DisplayName("Add player to team B")
+    void addPlayerTeamB() throws Exception {
+
+        if (adminToken == null) loginWithAdmin();
+
+        var player = memberRepository.save(MemberEntity.builder()
+                .name("player")
+                .surname("test")
+                .password("test")
+                .phone("")
+                .role(Role.USER)
+                .build());
+
+        var players = new HashSet<Long>();
+        players.add(player.getId());
+
+        var match =
+                matchRepository.save(MatchEntity.builder()
+                        .matchDay(LocalDate.now().plusDays(7))
+                        .confirmedPlayers(players)
+                        .notAvailablePlayers(new HashSet<>())
+                        .unConfirmedPlayers(new HashSet<>())
+                        .teamAPlayers(new ArrayList<>())
+                        .teamBPlayers(new ArrayList<>())
+                        .teamAGuests(new ArrayList<>())
+                        .teamBGuests(new ArrayList<>())
+                        .closed(false)
+                        .build());
+
+        mockMvc
+                .perform(
+                        post("/v1/matches/" + match.getId() + "/players/" + player.getId() + "/teamb")
+                                .header("Authorization", "Bearer " + adminToken)
+                                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        var matchFromDB = matchRepository.findById(match.getId());
+
+        Assertions.assertTrue(matchFromDB.get().getTeamBPlayers().contains(player.getId()));
+
+        matchRepository.deleteAll();
+        memberRepository.delete(player);
+    }
+
+    @Test
+    @DisplayName("Add player to team B not available")
+    void addPlayerTeamBNotAvailable() throws Exception {
+
+        if (adminToken == null) loginWithAdmin();
+
+        var player = memberRepository.save(MemberEntity.builder()
+                .name("player")
+                .surname("test")
+                .password("test")
+                .phone("")
+                .role(Role.USER)
+                .build());
+
+        var players = new HashSet<Long>();
+        players.add(player.getId());
+
+        var match =
+                matchRepository.save(MatchEntity.builder()
+                        .matchDay(LocalDate.now().plusDays(7))
+                        .confirmedPlayers(new HashSet<>())
+                        .notAvailablePlayers(players)
+                        .unConfirmedPlayers(new HashSet<>())
+                        .teamAPlayers(new ArrayList<>())
+                        .teamBPlayers(new ArrayList<>())
+                        .teamAGuests(new ArrayList<>())
+                        .teamBGuests(new ArrayList<>())
+                        .closed(false)
+                        .build());
+
+        mockMvc
+                .perform(
+                        post("/v1/matches/" + match.getId() + "/players/" + player.getId() + "/teamb")
+                                .header("Authorization", "Bearer " + adminToken)
+                                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+
+        matchRepository.deleteAll();
+        memberRepository.delete(player);
+    }
+
+    @Test
+    @DisplayName("Add player to team B player doesn't exist")
+    void addPlayerTeamBPlayerNotExist() throws Exception {
+
+        if (adminToken == null) loginWithAdmin();
+
+        var players = new HashSet<Long>();
+
+        var match =
+                matchRepository.save(MatchEntity.builder()
+                        .matchDay(LocalDate.now().plusDays(7))
+                        .confirmedPlayers(new HashSet<>())
+                        .notAvailablePlayers(players)
+                        .unConfirmedPlayers(new HashSet<>())
+                        .teamAPlayers(new ArrayList<>())
+                        .teamBPlayers(new ArrayList<>())
+                        .teamAGuests(new ArrayList<>())
+                        .teamBGuests(new ArrayList<>())
+                        .closed(false)
+                        .build());
+
+        mockMvc
+                .perform(
+                        post("/v1/matches/" + match.getId() + "/players/1234/teamb")
+                                .header("Authorization", "Bearer " + adminToken)
+                                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+
+        matchRepository.deleteAll();
+    }
+
+    @Test
+    @DisplayName("Add player to team B match doesn't exist")
+    void addPlayerTeamBMatchNotExist() throws Exception {
+
+        if (adminToken == null) loginWithAdmin();
+
+        var player = memberRepository.save(MemberEntity.builder()
+                .name("player")
+                .surname("test")
+                .password("test")
+                .phone("")
+                .role(Role.USER)
+                .build());
+
+        mockMvc
+                .perform(
+                        post("/v1/matches/1234/players/" + player.getId() + "/teama")
+                                .header("Authorization", "Bearer " + adminToken)
+                                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+
+        memberRepository.delete(player);
+    }
+
+    @Test
+    @DisplayName("Add player to team B without admin role")
+    void addPlayerTeamBNoAdminRole() throws Exception {
+
+        if (token == null) loginWithUser("MatchUser12");
+
+        mockMvc
+                .perform(
+                        post("/v1/matches/1234/players/1234/teamb")
+                                .header("Authorization", "Bearer " + token)
+                                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isForbidden());
+
     }
 }

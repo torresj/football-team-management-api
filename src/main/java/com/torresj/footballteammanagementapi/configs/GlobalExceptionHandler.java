@@ -65,4 +65,13 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     log.error(e.toString());
     return problemDetail;
   }
+
+  @ExceptionHandler(PlayerUnavailableException.class)
+  ProblemDetail playerUnavailableException(PlayerUnavailableException e) {
+    ProblemDetail problemDetail =
+            ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, e.getMessage());
+    problemDetail.setTitle("Player unavailable");
+    log.error(e.toString());
+    return problemDetail;
+  }
 }
