@@ -175,6 +175,24 @@ public class MemberControllerTest {
     }
 
     @Test
+    @DisplayName("Get logged member")
+    void getMe() throws Exception {
+
+        if (token == null) loginWithUser("userLogged");
+
+        var result = mockMvc
+                .perform(
+                        get("/v1/members/me")
+                                .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk());
+
+        var content = result.andReturn().getResponse().getContentAsString();
+        MemberDto response = objectMapper.readValue(content, MemberDto.class);
+
+        Assertions.assertEquals("userLogged", response.name());
+    }
+
+    @Test
     @DisplayName("Get member by ID that doesn't exist")
     void getMemberByIdNotExists() throws Exception {
         if (adminToken == null) loginWithAdmin();

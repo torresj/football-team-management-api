@@ -84,6 +84,32 @@ public class MemberController {
     return ResponseEntity.ok(member);
   }
 
+  @GetMapping("/me")
+  @SecurityRequirement(name = "Bearer Authentication")
+  @Operation(summary = "Get logged member")
+  @ApiResponses(
+          value = {
+                  @ApiResponse(
+                          responseCode = "200",
+                          description = "Member found",
+                          content = {
+                                  @Content(
+                                          mediaType = "application/json",
+                                          schema = @Schema(implementation = MemberDto.class))
+                          }),
+                  @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content),
+                  @ApiResponse(responseCode = "403", description = "Forbidden", content = @Content),
+                  @ApiResponse(responseCode = "404", description = "Not found", content = @Content),
+          })
+  @SecurityRequirement(name = "Bearer Authentication")
+  ResponseEntity<MemberDto> getMe(Principal principal)
+          throws MemberNotFoundException {
+    log.info("[MEMBERS] Getting member " + principal.getName());
+    var member = memberService.get(principal.getName());
+    log.info("[MEMBERS] Member found");
+    return ResponseEntity.ok(member);
+  }
+
   @GetMapping("/{id}/movements")
   @SecurityRequirement(name = "Bearer Authentication")
   @Operation(summary = "Get movements by member ID")

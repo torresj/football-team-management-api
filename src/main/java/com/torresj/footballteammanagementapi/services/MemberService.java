@@ -9,6 +9,8 @@ import java.util.List;
 
 public interface MemberService {
     MemberDto get(long id) throws MemberNotFoundException;
+
+    MemberDto get(String username) throws MemberNotFoundException;
     List<MemberDto> get();
     MemberDto update(long id, String name, String surname, String phone, int nCaptaincies, Role role) throws MemberNotFoundException;
     MemberDto create(String name, String surname, String phone, String password, Role role) throws MemberAlreadyExistsException;

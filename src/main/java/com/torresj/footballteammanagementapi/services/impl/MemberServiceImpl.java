@@ -41,6 +41,25 @@ public class MemberServiceImpl implements MemberService, UserDetailsService {
   }
 
   @Override
+  public MemberDto get(String username) throws MemberNotFoundException {
+    if (username.split("\\.").length != 2) {
+      throw new MemberNotFoundException(username);
+    }
+    var member =
+            memberRepository
+                    .findByNameAndSurname(username.split("\\.")[0], username.split("\\.")[1])
+                    .orElseThrow(() -> new MemberNotFoundException(""));
+    return new MemberDto(
+            member.getId(),
+            member.getName(),
+            member.getSurname(),
+            member.getPhone(),
+            member.getNCaptaincies(),
+            member.getRole(),
+            movementService.getBalance(member.getId()));
+  }
+
+  @Override
   public List<MemberDto> get() {
     return memberRepository.findAll().stream()
         .map(
