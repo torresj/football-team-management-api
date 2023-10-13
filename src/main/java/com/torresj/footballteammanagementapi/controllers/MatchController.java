@@ -1,5 +1,6 @@
 package com.torresj.footballteammanagementapi.controllers;
 
+import com.torresj.footballteammanagementapi.dtos.GuestRequest;
 import com.torresj.footballteammanagementapi.dtos.AddPlayerRequest;
 import com.torresj.footballteammanagementapi.dtos.CreateMatchDto;
 import com.torresj.footballteammanagementapi.dtos.MatchDto;
@@ -176,13 +177,13 @@ public class MatchController {
     @SecurityRequirement(name = "Bearer Authentication")
     ResponseEntity<Void> addPlayer(@Parameter(description = "Match id") @PathVariable long id,
                                    @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                                    description = "Player status for this match",
-                                    required = true,
-                                    content = @Content(schema = @Schema(implementation = AddPlayerRequest.class)))
-    @RequestBody AddPlayerRequest request, Principal principal)
+                                           description = "Player status for this match",
+                                           required = true,
+                                           content = @Content(schema = @Schema(implementation = AddPlayerRequest.class)))
+                                   @RequestBody AddPlayerRequest request, Principal principal)
             throws MatchNotFoundException, MemberNotFoundException {
         log.info("[MATCHES] Adding player " + principal.getName() + " to match " + id);
-        matchService.addPlayer(id,request.status(),principal.getName());
+        matchService.addPlayer(id, request.status(), principal.getName());
         log.info("[MATCHES] Player added");
         return ResponseEntity.ok().build();
     }
@@ -207,7 +208,7 @@ public class MatchController {
             @Parameter(description = "Player id") @PathVariable long playerId)
             throws MatchNotFoundException, MemberNotFoundException, PlayerUnavailableException {
         log.info("[MATCHES] Adding player " + playerId + " to team A");
-        matchService.addPlayerToTeamA(matchId,playerId);
+        matchService.addPlayerToTeamA(matchId, playerId);
         log.info("[MATCHES] Player added");
         return ResponseEntity.ok().build();
     }
@@ -232,7 +233,7 @@ public class MatchController {
             @Parameter(description = "Player id") @PathVariable long playerId)
             throws MatchNotFoundException, MemberNotFoundException, PlayerUnavailableException {
         log.info("[MATCHES] Adding player " + playerId + " to team B");
-        matchService.addPlayerToTeamB(matchId,playerId);
+        matchService.addPlayerToTeamB(matchId, playerId);
         log.info("[MATCHES] Player added");
         return ResponseEntity.ok().build();
     }
@@ -257,7 +258,7 @@ public class MatchController {
             @Parameter(description = "Player id") @PathVariable long playerId)
             throws MatchNotFoundException {
         log.info("[MATCHES] Removing player " + playerId + " from team A");
-        matchService.removePlayerFromTeamA(matchId,playerId);
+        matchService.removePlayerFromTeamA(matchId, playerId);
         log.info("[MATCHES] Player removed");
         return ResponseEntity.ok().build();
     }
@@ -282,8 +283,122 @@ public class MatchController {
             @Parameter(description = "Player id") @PathVariable long playerId)
             throws MatchNotFoundException {
         log.info("[MATCHES] Removing player " + playerId + " from team B");
-        matchService.removePlayerFromTeamB(matchId,playerId);
+        matchService.removePlayerFromTeamB(matchId, playerId);
         log.info("[MATCHES] Player removed");
+        return ResponseEntity.ok().build();
+    }
+
+    @Secured("ROLE_ADMIN")
+    @PostMapping("/{matchId}/guests/teama")
+    @SecurityRequirement(name = "Bearer Authentication")
+    @Operation(summary = "Add guest to team A")
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Guest added",
+                            content = {@Content()}),
+                    @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content),
+                    @ApiResponse(responseCode = "403", description = "Forbidden", content = @Content),
+                    @ApiResponse(responseCode = "404", description = "Not found", content = @Content),
+            })
+    @SecurityRequirement(name = "Bearer Authentication")
+    ResponseEntity<Void> addGuestToTeamA(
+            @Parameter(description = "Match id") @PathVariable long matchId,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "Add guest",
+                    required = true,
+                    content = @Content(schema = @Schema(implementation = GuestRequest.class)))
+            @RequestBody GuestRequest request) throws MatchNotFoundException {
+        log.info("[MATCHES] Adding guest " + request.guest() + " to team A");
+        matchService.addGuestToTeamA(matchId, request.guest());
+        log.info("[MATCHES] Guest added");
+        return ResponseEntity.ok().build();
+    }
+
+    @Secured("ROLE_ADMIN")
+    @PostMapping("/{matchId}/guests/teamb")
+    @SecurityRequirement(name = "Bearer Authentication")
+    @Operation(summary = "Add guest to team B")
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Guest added",
+                            content = {@Content()}),
+                    @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content),
+                    @ApiResponse(responseCode = "403", description = "Forbidden", content = @Content),
+                    @ApiResponse(responseCode = "404", description = "Not found", content = @Content),
+            })
+    @SecurityRequirement(name = "Bearer Authentication")
+    ResponseEntity<Void> addGuestToTeamB(
+            @Parameter(description = "Match id") @PathVariable long matchId,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "Add guest",
+                    required = true,
+                    content = @Content(schema = @Schema(implementation = GuestRequest.class)))
+            @RequestBody GuestRequest request) throws MatchNotFoundException {
+        log.info("[MATCHES] Adding guest " + request.guest() + " to team B");
+        matchService.addGuestToTeamB(matchId, request.guest());
+        log.info("[MATCHES] Guest added");
+        return ResponseEntity.ok().build();
+    }
+
+    @Secured("ROLE_ADMIN")
+    @DeleteMapping("/{matchId}/guests/teama")
+    @SecurityRequirement(name = "Bearer Authentication")
+    @Operation(summary = "Delete guest from team A")
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Guest removed",
+                            content = {@Content()}),
+                    @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content),
+                    @ApiResponse(responseCode = "403", description = "Forbidden", content = @Content),
+                    @ApiResponse(responseCode = "404", description = "Not found", content = @Content),
+            })
+    @SecurityRequirement(name = "Bearer Authentication")
+    ResponseEntity<Void> deleteGuestFromTeamA(
+            @Parameter(description = "Match id") @PathVariable long matchId,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "Remove guest",
+                    required = true,
+                    content = @Content(schema = @Schema(implementation = GuestRequest.class)))
+            @RequestBody GuestRequest request)
+            throws MatchNotFoundException {
+        log.info("[MATCHES] Removing guest " + request.guest() + " from team A");
+        matchService.removeGuestFromTeamA(matchId, request.guest());
+        log.info("[MATCHES] Guest removed");
+        return ResponseEntity.ok().build();
+    }
+
+    @Secured("ROLE_ADMIN")
+    @DeleteMapping("/{matchId}/guests/teamb")
+    @SecurityRequirement(name = "Bearer Authentication")
+    @Operation(summary = "Delete guest from team B")
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Guest removed",
+                            content = {@Content()}),
+                    @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content),
+                    @ApiResponse(responseCode = "403", description = "Forbidden", content = @Content),
+                    @ApiResponse(responseCode = "404", description = "Not found", content = @Content),
+            })
+    @SecurityRequirement(name = "Bearer Authentication")
+    ResponseEntity<Void> deleteGuestFromTeamB(
+            @Parameter(description = "Match id") @PathVariable long matchId,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "Remove guest",
+                    required = true,
+                    content = @Content(schema = @Schema(implementation = GuestRequest.class)))
+            @RequestBody GuestRequest request)
+            throws MatchNotFoundException {
+        log.info("[MATCHES] Removing guest " + request.guest() + " from team B");
+        matchService.removeGuestFromTeamB(matchId, request.guest());
+        log.info("[MATCHES] Guest removed");
         return ResponseEntity.ok().build();
     }
 }

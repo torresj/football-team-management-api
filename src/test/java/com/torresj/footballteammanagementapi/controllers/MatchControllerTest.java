@@ -25,6 +25,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -951,5 +952,229 @@ public class MatchControllerTest {
 
         matchRepository.deleteAll();
         memberRepository.delete(player);
+    }
+
+    @Test
+    @DisplayName("Add guest to team A")
+    void addGuestTeamA() throws Exception {
+
+        if (adminToken == null) loginWithAdmin();
+
+        var match =
+                matchRepository.save(MatchEntity.builder()
+                        .matchDay(LocalDate.now().plusDays(7))
+                        .confirmedPlayers(new HashSet<>())
+                        .notAvailablePlayers(new HashSet<>())
+                        .unConfirmedPlayers(new HashSet<>())
+                        .teamAPlayers(new ArrayList<>())
+                        .teamBPlayers(new ArrayList<>())
+                        .teamAGuests(new ArrayList<>())
+                        .teamBGuests(new ArrayList<>())
+                        .closed(false)
+                        .build());
+
+        var request = new GuestRequest("guest");
+
+        mockMvc
+                .perform(
+                        post("/v1/matches/" + match.getId() + "/guests/teama")
+                                .header("Authorization", "Bearer " + adminToken)
+                                .accept(MediaType.APPLICATION_JSON)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk());
+
+        var matchFromDB = matchRepository.findById(match.getId());
+
+        Assertions.assertTrue(matchFromDB.get().getTeamAGuests().contains(request.guest()));
+
+        matchRepository.deleteAll();
+    }
+
+    @Test
+    @DisplayName("Add guest to team B")
+    void addGuestTeamB() throws Exception {
+
+        if (adminToken == null) loginWithAdmin();
+
+        var match =
+                matchRepository.save(MatchEntity.builder()
+                        .matchDay(LocalDate.now().plusDays(7))
+                        .confirmedPlayers(new HashSet<>())
+                        .notAvailablePlayers(new HashSet<>())
+                        .unConfirmedPlayers(new HashSet<>())
+                        .teamAPlayers(new ArrayList<>())
+                        .teamBPlayers(new ArrayList<>())
+                        .teamAGuests(new ArrayList<>())
+                        .teamBGuests(new ArrayList<>())
+                        .closed(false)
+                        .build());
+
+        var request = new GuestRequest("guest");
+
+        mockMvc
+                .perform(
+                        post("/v1/matches/" + match.getId() + "/guests/teamb")
+                                .header("Authorization", "Bearer " + adminToken)
+                                .accept(MediaType.APPLICATION_JSON)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk());
+
+        var matchFromDB = matchRepository.findById(match.getId());
+
+        Assertions.assertTrue(matchFromDB.get().getTeamBGuests().contains(request.guest()));
+
+        matchRepository.deleteAll();
+    }
+
+    @Test
+    @DisplayName("Delete guest from team A")
+    void deleteGuestFromTeamA() throws Exception {
+
+        if (adminToken == null) loginWithAdmin();
+
+        var match =
+                matchRepository.save(MatchEntity.builder()
+                        .matchDay(LocalDate.now().plusDays(7))
+                        .confirmedPlayers(new HashSet<>())
+                        .notAvailablePlayers(new HashSet<>())
+                        .unConfirmedPlayers(new HashSet<>())
+                        .teamAPlayers(new ArrayList<>())
+                        .teamBPlayers(new ArrayList<>())
+                        .teamAGuests(List.of("guest"))
+                        .teamBGuests(new ArrayList<>())
+                        .closed(false)
+                        .build());
+
+        var request = new GuestRequest("guest");
+
+        mockMvc
+                .perform(
+                        delete("/v1/matches/" + match.getId() + "/guests/teama")
+                                .header("Authorization", "Bearer " + adminToken)
+                                .accept(MediaType.APPLICATION_JSON)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk());
+
+        var matchFromDB = matchRepository.findById(match.getId());
+
+        Assertions.assertTrue(matchFromDB.get().getTeamAGuests().isEmpty());
+
+        matchRepository.deleteAll();
+    }
+
+    @Test
+    @DisplayName("Delete guest from team B")
+    void deleteGuestFromTeamB() throws Exception {
+
+        if (adminToken == null) loginWithAdmin();
+
+        var match =
+                matchRepository.save(MatchEntity.builder()
+                        .matchDay(LocalDate.now().plusDays(7))
+                        .confirmedPlayers(new HashSet<>())
+                        .notAvailablePlayers(new HashSet<>())
+                        .unConfirmedPlayers(new HashSet<>())
+                        .teamAPlayers(new ArrayList<>())
+                        .teamBPlayers(new ArrayList<>())
+                        .teamAGuests(new ArrayList<>())
+                        .teamBGuests(List.of("guest"))
+                        .closed(false)
+                        .build());
+
+        var request = new GuestRequest("guest");
+
+        mockMvc
+                .perform(
+                        delete("/v1/matches/" + match.getId() + "/guests/teamb")
+                                .header("Authorization", "Bearer " + adminToken)
+                                .accept(MediaType.APPLICATION_JSON)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk());
+
+        var matchFromDB = matchRepository.findById(match.getId());
+
+        Assertions.assertTrue(matchFromDB.get().getTeamBGuests().isEmpty());
+
+        matchRepository.deleteAll();
+    }
+
+    @Test
+    @DisplayName("Add guest to team A without admin role")
+    void addGuestTeamANoAdminRole() throws Exception {
+
+        if (token == null) loginWithUser("MatchUser13");
+
+        var request = new GuestRequest("guest");
+
+        mockMvc
+                .perform(
+                        post("/v1/matches/1234/guests/teama")
+                                .header("Authorization", "Bearer " + token)
+                                .accept(MediaType.APPLICATION_JSON)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isForbidden());
+
+    }
+
+    @Test
+    @DisplayName("Add guest to team B without admin role")
+    void addGuestTeamBNoAdminRole() throws Exception {
+
+        if (token == null) loginWithUser("MatchUser14");
+
+        var request = new GuestRequest("guest");
+
+        mockMvc
+                .perform(
+                        post("/v1/matches/1234/guests/teamb")
+                                .header("Authorization", "Bearer " + token)
+                                .accept(MediaType.APPLICATION_JSON)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isForbidden());
+
+    }
+
+    @Test
+    @DisplayName("Remove guest to team A without admin role")
+    void removeGuestTeamANoAdminRole() throws Exception {
+
+        if (token == null) loginWithUser("MatchUser15");
+
+        var request = new GuestRequest("guest");
+
+        mockMvc
+                .perform(
+                        delete("/v1/matches/1234/guests/teama")
+                                .header("Authorization", "Bearer " + token)
+                                .accept(MediaType.APPLICATION_JSON)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isForbidden());
+
+    }
+
+    @Test
+    @DisplayName("Remove guest to team B without admin role")
+    void removeGuestTeamBNoAdminRole() throws Exception {
+
+        if (token == null) loginWithUser("MatchUser16");
+
+        var request = new GuestRequest("guest");
+
+        mockMvc
+                .perform(
+                        delete("/v1/matches/1234/guests/teamb")
+                                .header("Authorization", "Bearer " + token)
+                                .accept(MediaType.APPLICATION_JSON)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isForbidden());
+
     }
 }
