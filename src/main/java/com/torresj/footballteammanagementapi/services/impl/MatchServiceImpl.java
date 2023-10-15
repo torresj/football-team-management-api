@@ -218,6 +218,17 @@ public class MatchServiceImpl implements MatchService {
         matchRepository.deleteById(id);
     }
 
+    @Override
+    public void closePastMatches() {
+        matchRepository.findByClosedAndMatchDayBefore(false,LocalDate.now()).forEach(matchEntity -> {
+            try {
+                close(matchEntity.getId());
+            } catch (MatchNotFoundException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
     private MatchPlayer getPlayer(long playerId) {
         var member = memberRepository.findById(playerId);
         return new MatchPlayer(

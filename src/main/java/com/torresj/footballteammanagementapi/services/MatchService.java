@@ -40,4 +40,6 @@ public interface MatchService {
   void removeGuestFromTeamB(long matchId, String guest) throws MatchNotFoundException;
 
   void delete(long id);
+
+  void closePastMatches();
 }
