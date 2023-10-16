@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -83,7 +84,7 @@ public class MatchServiceImpl implements MatchService {
         var match = matchRepository.findById(id).orElseThrow(() -> new MatchNotFoundException(id));
         match.setClosed(true);
         matchRepository.save(match);
-        match.getNotAvailablePlayers().stream()
+        Stream.concat(match.getNotAvailablePlayers().stream(),match.getUnConfirmedPlayers().stream())
                 .map(player -> MovementEntity.builder()
                         .type(MovementType.EXPENSE)
                         .amount(-1)
