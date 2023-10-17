@@ -6,6 +6,10 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.Instant;
+import java.time.LocalDate;
 
 @Entity
 @AllArgsConstructor
@@ -29,4 +33,7 @@ public class MovementEntity {
 
     @Column
     private String description;
+
+    @CreationTimestamp
+    private LocalDate createdOn;
 }

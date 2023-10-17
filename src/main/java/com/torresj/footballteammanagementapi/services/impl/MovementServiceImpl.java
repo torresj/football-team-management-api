@@ -34,7 +34,8 @@ public class MovementServiceImpl implements MovementService {
                   entity.getType(),
                   memberName,
                   entity.getAmount(),
-                  entity.getDescription());
+                  entity.getDescription(),
+                  entity.getCreatedOn());
             })
         .toList();
   }
@@ -54,7 +55,8 @@ public class MovementServiceImpl implements MovementService {
         movement.getType(),
         memberName,
         movement.getAmount(),
-        movement.getDescription());
+        movement.getDescription(),
+        movement.getCreatedOn());
   }
 
   @Override
@@ -73,7 +75,8 @@ public class MovementServiceImpl implements MovementService {
                   movementEntity.getType(),
                   memberName,
                   movementEntity.getAmount(),
-                  movementEntity.getDescription());
+                  movementEntity.getDescription(),
+                  movementEntity.getCreatedOn());
             })
         .toList();
   }
@@ -105,7 +108,8 @@ public class MovementServiceImpl implements MovementService {
         movementEntity.getType(),
         member.getName() + " " + member.getSurname(),
         movementEntity.getAmount(),
-        movementEntity.getDescription());
+        movementEntity.getDescription(),
+        movementEntity.getCreatedOn());
   }
 
   @Override
@@ -134,7 +138,8 @@ public class MovementServiceImpl implements MovementService {
         movementUpdated.getType(),
         member.getName() + " " + member.getSurname(),
         movementUpdated.getAmount(),
-        movementUpdated.getDescription());
+        movementUpdated.getDescription(),
+        movementUpdated.getCreatedOn());
   }
 
   @Override
