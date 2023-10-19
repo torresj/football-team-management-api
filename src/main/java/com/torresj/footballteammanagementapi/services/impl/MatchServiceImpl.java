@@ -54,6 +54,7 @@ public class MatchServiceImpl implements MatchService {
     public List<MatchDto> get() {
         return matchRepository.findAll(Sort.by(Sort.Direction.DESC, "matchDay")).stream()
                 .map(this::matchToDto)
+                .filter(MatchDto::closed)
                 .toList();
     }
 

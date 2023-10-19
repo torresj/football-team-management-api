@@ -138,9 +138,24 @@ public class MatchControllerTest {
                                 .teamBPlayers(new ArrayList<>())
                                 .teamAGuests(new ArrayList<>())
                                 .teamBGuests(new ArrayList<>())
-                                .closed(false)
-                                .build(), MatchEntity.builder()
+                                .closed(true)
+                                .build(),
+                        MatchEntity.builder()
                                 .matchDay(LocalDate.now().minusDays(1))
+                                .confirmedPlayers(new HashSet<>())
+                                .notAvailablePlayers(new HashSet<>())
+                                .unConfirmedPlayers(
+                                        memberRepository.findAll().stream()
+                                                .filter(memberEntity -> adminUser.equals(memberEntity.getName()))
+                                                .map(MemberEntity::getId).collect(Collectors.toSet()))
+                                .teamAPlayers(new ArrayList<>())
+                                .teamBPlayers(new ArrayList<>())
+                                .teamAGuests(new ArrayList<>())
+                                .teamBGuests(new ArrayList<>())
+                                .closed(true)
+                                .build(),
+                        MatchEntity.builder()
+                                .matchDay(LocalDate.now().minusDays(10))
                                 .confirmedPlayers(new HashSet<>())
                                 .notAvailablePlayers(new HashSet<>())
                                 .unConfirmedPlayers(
