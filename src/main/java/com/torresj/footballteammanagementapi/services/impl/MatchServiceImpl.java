@@ -85,12 +85,12 @@ public class MatchServiceImpl implements MatchService {
         var match = matchRepository.findById(id).orElseThrow(() -> new MatchNotFoundException(id));
         match.setClosed(true);
         matchRepository.save(match);
-        Stream.concat(match.getNotAvailablePlayers().stream(),match.getUnConfirmedPlayers().stream())
+        Stream.concat(match.getNotAvailablePlayers().stream(), match.getUnConfirmedPlayers().stream())
                 .map(player -> MovementEntity.builder()
                         .type(MovementType.EXPENSE)
                         .amount(-1)
                         .description("Multa por no ir al partido del "
-                                + match.getMatchDay().format(DateTimeFormatter.BASIC_ISO_DATE))
+                                + DateTimeFormatter.ofPattern("dd/MM/yy").format(match.getMatchDay()))
                         .memberId(player)
                         .build())
                 .forEach(movementRepository::save);
@@ -135,7 +135,7 @@ public class MatchServiceImpl implements MatchService {
 
         if (match.getNotAvailablePlayers().contains(playerId)
                 || match.getUnConfirmedPlayers().contains(playerId)
-                || !match.getConfirmedPlayers().contains(playerId)){
+                || !match.getConfirmedPlayers().contains(playerId)) {
             throw new PlayerUnavailableException();
         }
 
@@ -155,7 +155,7 @@ public class MatchServiceImpl implements MatchService {
 
         if (match.getNotAvailablePlayers().contains(playerId)
                 || match.getUnConfirmedPlayers().contains(playerId)
-                || !match.getConfirmedPlayers().contains(playerId)){
+                || !match.getConfirmedPlayers().contains(playerId)) {
             throw new PlayerUnavailableException();
         }
 
@@ -222,7 +222,7 @@ public class MatchServiceImpl implements MatchService {
 
     @Override
     public void closePastMatches() {
-        matchRepository.findByClosedAndMatchDayBefore(false,LocalDate.now()).forEach(matchEntity -> {
+        matchRepository.findByClosedAndMatchDayBefore(false, LocalDate.now()).forEach(matchEntity -> {
             try {
                 close(matchEntity.getId());
             } catch (MatchNotFoundException e) {
