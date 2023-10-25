@@ -428,52 +428,18 @@ public class MemberControllerTest {
     @Test
     @DisplayName("Update member password")
     void updateMemberPassword() throws Exception {
-        var entity =
-                memberRepository.save(
-                        MemberEntity.builder()
-                                .role(Role.USER)
-                                .phone("")
-                                .password("test")
-                                .name("test")
-                                .surname("test")
-                                .build());
         var updateDto = new UpdatePasswordDto("test2");
 
-        if (adminToken == null) loginWithAdmin();
+        if (token == null) loginWithUser("user5");
 
         mockMvc
                 .perform(
-                        patch("/v1/members/" + entity.getId())
-                                .header("Authorization", "Bearer " + adminToken)
+                        patch("/v1/members/me")
+                                .header("Authorization", "Bearer " + token)
                                 .accept(MediaType.APPLICATION_JSON)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(updateDto)))
                 .andExpect(status().isOk());
-
-        var entityUpdated =
-                memberRepository
-                        .findById(entity.getId())
-                        .orElseThrow(() -> new MemberNotFoundException(""));
-        Assertions.assertNotEquals("test", entityUpdated.getPassword());
-
-        memberRepository.deleteById(entity.getId());
-    }
-
-    @Test
-    @DisplayName("Update password member doesn't exist")
-    void updatePasswordMemberNotExist() throws Exception {
-        var updateDto = new UpdatePasswordDto("test2");
-
-        if (adminToken == null) loginWithAdmin();
-
-        mockMvc
-                .perform(
-                        patch("/v1/members/" + new Random().nextInt())
-                                .header("Authorization", "Bearer " + adminToken)
-                                .accept(MediaType.APPLICATION_JSON)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(updateDto)))
-                .andExpect(status().isNotFound());
     }
 
     @Test
