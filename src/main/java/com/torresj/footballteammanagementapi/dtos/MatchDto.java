@@ -6,7 +6,7 @@ import java.util.Set;
 
 public record MatchDto(
     long id,
-    LocalDate matchDay,
+    String matchDay,
     Set<MatchPlayer> confirmedPlayers,
     Set<MatchPlayer> unConfirmedPlayers,
     Set<MatchPlayer> notAvailablePlayers,

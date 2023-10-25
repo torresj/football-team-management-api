@@ -34,6 +34,8 @@ public class MatchServiceImpl implements MatchService {
     private final MatchRepository matchRepository;
     private final MovementRepository movementRepository;
 
+    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
     @Value("${admin.user}")
     private final String adminUser;
 
@@ -243,7 +245,7 @@ public class MatchServiceImpl implements MatchService {
     private MatchDto matchToDto(MatchEntity entity) {
         return new MatchDto(
                 entity.getId(),
-                entity.getMatchDay(),
+                formatter.format(entity.getMatchDay()),
                 entity.getConfirmedPlayers().stream().map(this::getPlayer).collect(Collectors.toSet()),
                 entity.getUnConfirmedPlayers().stream().map(this::getPlayer).collect(Collectors.toSet()),
                 entity.getNotAvailablePlayers().stream().map(this::getPlayer).collect(Collectors.toSet()),

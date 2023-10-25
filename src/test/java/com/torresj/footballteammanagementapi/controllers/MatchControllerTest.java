@@ -24,6 +24,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -230,6 +231,7 @@ public class MatchControllerTest {
     @Test
     @DisplayName("Get next match")
     void getNextMatch() throws Exception {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         var matches =
                 matchRepository.saveAll(List.of(MatchEntity.builder()
                         .matchDay(LocalDate.now())
@@ -270,7 +272,7 @@ public class MatchControllerTest {
         var content = result.andReturn().getResponse().getContentAsString();
         var match = objectMapper.readValue(content, MatchDto.class);
 
-        Assertions.assertEquals(matches.get(0).getMatchDay(), match.matchDay());
+        Assertions.assertEquals(formatter.format(matches.get(0).getMatchDay()), match.matchDay());
 
         matchRepository.deleteAll();
     }
