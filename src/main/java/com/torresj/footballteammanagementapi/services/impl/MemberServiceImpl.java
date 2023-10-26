@@ -113,6 +113,7 @@ public class MemberServiceImpl implements MemberService, UserDetailsService {
                         .nCaptaincies(nCaptaincies)
                         .nonce(member.getNonce())
                         .password(member.getPassword())
+                        .injured(member.isInjured())
                         .build());
         return new MemberDto(
                 memberUpdated.getId(),
@@ -139,6 +140,7 @@ public class MemberServiceImpl implements MemberService, UserDetailsService {
                                 .phone(phone)
                                 .role(role)
                                 .password(password)
+                                .injured(false)
                                 .build());
 
         return new MemberDto(
@@ -165,6 +167,7 @@ public class MemberServiceImpl implements MemberService, UserDetailsService {
                         .nCaptaincies(member.getNCaptaincies())
                         .role(member.getRole())
                         .phone(member.getPhone())
+                        .injured(member.isInjured())
                         .build());
     }
 
@@ -187,6 +190,7 @@ public class MemberServiceImpl implements MemberService, UserDetailsService {
                         .nCaptaincies(member.getNCaptaincies())
                         .role(member.getRole())
                         .phone(member.getPhone())
+                        .injured(member.isInjured())
                         .build());
     }
 
