@@ -38,4 +38,7 @@ public class MemberEntity {
 
     @Column
     private long nonce;
+
+    @Column
+    private boolean injured;
 }

@@ -398,8 +398,36 @@ public class MatchControllerTest {
 
         var players = new HashSet<Long>();
 
-        players.add(1234L);
-        players.add(1235L);
+        var members = memberRepository.saveAll(List.of(
+                MemberEntity.builder()
+                        .role(Role.USER)
+                        .phone("")
+                        .password("test")
+                        .name("test")
+                        .surname("test1")
+                        .injured(false)
+                        .build(),
+                MemberEntity.builder()
+                        .role(Role.USER)
+                        .phone("")
+                        .password("test")
+                        .name("test")
+                        .surname("test2")
+                        .injured(false)
+                        .build(),
+                MemberEntity.builder()
+                        .role(Role.USER)
+                        .phone("")
+                        .password("test")
+                        .name("test")
+                        .surname("test3")
+                        .injured(true)
+                        .build()
+        ));
+
+        players.add(members.get(0).getId());
+        players.add(members.get(1).getId());
+        players.add(members.get(2).getId());
 
         var match =
                 matchRepository.save(MatchEntity.builder()
@@ -430,12 +458,13 @@ public class MatchControllerTest {
 
         Assertions.assertTrue(matchClosed.isClosed());
 
-        for (long player : match.getNotAvailablePlayers()) {
-            Assertions.assertFalse(movementRepository.findByMemberId(player).isEmpty());
-        }
+        Assertions.assertFalse(movementRepository.findByMemberId(members.get(0).getId()).isEmpty());
+        Assertions.assertFalse(movementRepository.findByMemberId(members.get(1).getId()).isEmpty());
+        Assertions.assertTrue(movementRepository.findByMemberId(members.get(2).getId()).isEmpty());
 
         movementRepository.deleteAll();
         matchRepository.deleteAll();
+        memberRepository.deleteAll(members);
     }
 
     @Test

@@ -293,4 +293,33 @@ public class MemberController {
         log.info("[MEMBERS] Member " + id + " deleted");
         return ResponseEntity.ok().build();
     }
+
+    @Secured("ROLE_ADMIN")
+    @PatchMapping("/{id}/injured")
+    @Operation(summary = "Change injured status of a member")
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "member updated",
+                            content = {@Content()}),
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "member not found",
+                            content = {@Content()})
+            })
+    @SecurityRequirement(name = "Bearer Authentication")
+    ResponseEntity<Void> updateInjuredStatus(
+            @Parameter(description = "Member id") @PathVariable long id,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "Update Member",
+                    required = true,
+                    content = @Content(schema = @Schema(implementation = RequestInjuredDto.class)))
+            @RequestBody
+            RequestInjuredDto request) throws MemberNotFoundException {
+        log.info("[MEMBERS] Updating member " + id + " injured status to ");
+        memberService.setInjured(id, request.injured());
+        log.info("[MEMBERS] Member " + id + " injured status updated");
+        return ResponseEntity.ok().build();
+    }
 }

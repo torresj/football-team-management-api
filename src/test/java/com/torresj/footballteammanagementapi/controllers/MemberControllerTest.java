@@ -488,6 +488,39 @@ public class MemberControllerTest {
     }
 
     @Test
+    @DisplayName("Update member injured status")
+    void updateMemberInjuredStatus() throws Exception {
+        var entity =
+                memberRepository.save(
+                        MemberEntity.builder()
+                                .role(Role.USER)
+                                .phone("")
+                                .password("test")
+                                .name("test")
+                                .surname("test")
+                                .injured(false)
+                                .build());
+        var request = new RequestInjuredDto(true);
+
+        if (adminToken == null) loginWithAdmin();
+
+        mockMvc
+                .perform(
+                        patch("/v1/members/" + entity.getId() + "/injured")
+                                .header("Authorization", "Bearer " + adminToken)
+                                .accept(MediaType.APPLICATION_JSON)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk());
+
+        var member = memberRepository.findById(entity.getId());
+        Assertions.assertTrue(member.isPresent());
+        Assertions.assertTrue(member.get().isInjured());
+
+        memberRepository.deleteById(entity.getId());
+    }
+
+    @Test
     @DisplayName("Delete member")
     void deleteMember() throws Exception {
         var entity =

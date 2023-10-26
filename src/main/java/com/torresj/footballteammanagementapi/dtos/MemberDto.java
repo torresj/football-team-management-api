@@ -9,4 +9,5 @@ public record MemberDto(
     String phone,
     int nCaptaincies,
     Role role,
-    double balance) {}
+    double balance,
+    boolean injured) {}

@@ -18,6 +18,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -88,12 +89,16 @@ public class MatchServiceImpl implements MatchService {
         match.setClosed(true);
         matchRepository.save(match);
         Stream.concat(match.getNotAvailablePlayers().stream(), match.getUnConfirmedPlayers().stream())
-                .map(player -> MovementEntity.builder()
+                .map(memberRepository::findById)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .filter(member -> !member.isInjured())
+                .map(member -> MovementEntity.builder()
                         .type(MovementType.EXPENSE)
                         .amount(-1)
                         .description("Multa por no ir al partido del "
                                 + DateTimeFormatter.ofPattern("dd/MM/yy").format(match.getMatchDay()))
-                        .memberId(player)
+                        .memberId(member.getId())
                         .build())
                 .forEach(movementRepository::save);
     }
