@@ -39,6 +39,6 @@ public class MemberEntity {
     @Column
     private long nonce;
 
-    @Column
+    @Column(nullable = false)
     private boolean injured;
 }
