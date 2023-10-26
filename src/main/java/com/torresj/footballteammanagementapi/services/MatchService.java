@@ -39,6 +39,10 @@ public interface MatchService {
 
   void removeGuestFromTeamB(long matchId, String guest) throws MatchNotFoundException;
 
+  void setRandomCaptainTeamA(long matchId) throws MatchNotFoundException;
+
+  void setRandomCaptainTeamB(long matchId) throws MatchNotFoundException;
+
   void delete(long id);
 
   void closePastMatches();

@@ -21,6 +21,12 @@ public class MatchEntity {
     @Column(columnDefinition = "DATE")
     private LocalDate matchDay;
 
+    @Column
+    private Long captainTeamA;
+
+    @Column
+    private Long captainTeamB;
+
     @ElementCollection(targetClass = Long.class, fetch = FetchType.EAGER)
     private Set<Long> confirmedPlayers;
 

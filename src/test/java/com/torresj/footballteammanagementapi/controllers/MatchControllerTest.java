@@ -25,10 +25,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -442,6 +439,8 @@ public class MatchControllerTest {
                         .teamBPlayers(new ArrayList<>())
                         .teamAGuests(new ArrayList<>())
                         .teamBGuests(new ArrayList<>())
+                        .captainTeamA(null)
+                        .captainTeamB(null)
                         .closed(false)
                         .build());
 
@@ -461,6 +460,85 @@ public class MatchControllerTest {
         Assertions.assertFalse(movementRepository.findByMemberId(members.get(0).getId()).isEmpty());
         Assertions.assertFalse(movementRepository.findByMemberId(members.get(1).getId()).isEmpty());
         Assertions.assertTrue(movementRepository.findByMemberId(members.get(2).getId()).isEmpty());
+
+        movementRepository.deleteAll();
+        matchRepository.deleteAll();
+        memberRepository.deleteAll(members);
+    }
+
+    @Test
+    @DisplayName("Close match with Captains")
+    void closeMatchWithCaptains() throws Exception {
+
+        var players = new HashSet<Long>();
+
+        var members = memberRepository.saveAll(List.of(
+                MemberEntity.builder()
+                        .role(Role.USER)
+                        .phone("")
+                        .password("test")
+                        .name("test")
+                        .surname("test1")
+                        .injured(false)
+                        .build(),
+                MemberEntity.builder()
+                        .role(Role.USER)
+                        .phone("")
+                        .password("test")
+                        .name("test")
+                        .surname("test2")
+                        .injured(false)
+                        .build(),
+                MemberEntity.builder()
+                        .role(Role.USER)
+                        .phone("")
+                        .password("test")
+                        .name("test")
+                        .surname("test3")
+                        .injured(true)
+                        .build()
+        ));
+
+        players.add(members.get(0).getId());
+        players.add(members.get(1).getId());
+        players.add(members.get(2).getId());
+
+        var match =
+                matchRepository.save(MatchEntity.builder()
+                        .matchDay(LocalDate.now().minusDays(7))
+                        .confirmedPlayers(new HashSet<>())
+                        .notAvailablePlayers(players)
+                        .unConfirmedPlayers(
+                                memberRepository.findAll().stream()
+                                        .filter(memberEntity -> adminUser.equals(memberEntity.getName()))
+                                        .map(MemberEntity::getId).collect(Collectors.toSet()))
+                        .teamAPlayers(new ArrayList<>())
+                        .teamBPlayers(new ArrayList<>())
+                        .teamAGuests(new ArrayList<>())
+                        .teamBGuests(new ArrayList<>())
+                        .captainTeamA(members.get(0).getId())
+                        .captainTeamB(members.get(1).getId())
+                        .closed(false)
+                        .build());
+
+        if (adminToken == null) loginWithAdmin();
+
+        mockMvc
+                .perform(
+                        post("/v1/matches/" + match.getId() + "/close")
+                                .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk());
+
+        var matchClosed = matchRepository
+                .findById(match.getId()).orElseThrow(() -> new MatchNotFoundException(match.getId()));
+
+        Assertions.assertTrue(matchClosed.isClosed());
+
+        Assertions.assertFalse(movementRepository.findByMemberId(members.get(0).getId()).isEmpty());
+        Assertions.assertFalse(movementRepository.findByMemberId(members.get(1).getId()).isEmpty());
+        Assertions.assertTrue(movementRepository.findByMemberId(members.get(2).getId()).isEmpty());
+        Assertions.assertEquals(1, memberRepository.findById(members.get(0).getId()).get().getNCaptaincies());
+        Assertions.assertEquals(1, memberRepository.findById(members.get(1).getId()).get().getNCaptaincies());
 
         movementRepository.deleteAll();
         matchRepository.deleteAll();
@@ -1222,5 +1300,137 @@ public class MatchControllerTest {
                                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isForbidden());
 
+    }
+
+    @Test
+    @DisplayName("Add player to team A as captain")
+    void addPlayerTeamAAsCaptain() throws Exception {
+
+        if (adminToken == null) loginWithAdmin();
+
+        var members = memberRepository.saveAll(List.of(
+                MemberEntity.builder()
+                        .name("player")
+                        .surname("test")
+                        .password("test")
+                        .phone("")
+                        .role(Role.USER)
+                        .nCaptaincies(0)
+                        .build(),
+                MemberEntity.builder()
+                        .name("player1")
+                        .surname("test")
+                        .password("test")
+                        .phone("")
+                        .role(Role.USER)
+                        .nCaptaincies(0)
+                        .build(),
+                MemberEntity.builder()
+                        .name("player2")
+                        .surname("test")
+                        .password("test")
+                        .phone("")
+                        .role(Role.USER)
+                        .nCaptaincies(2)
+                        .build()
+        ));
+
+        var players = new HashSet<Long>();
+        players.add(members.get(0).getId());
+        players.add(members.get(1).getId());
+        players.add(members.get(2).getId());
+
+        var match =
+                matchRepository.save(MatchEntity.builder()
+                        .matchDay(LocalDate.now().plusDays(7))
+                        .confirmedPlayers(players)
+                        .notAvailablePlayers(new HashSet<>())
+                        .unConfirmedPlayers(new HashSet<>())
+                        .teamAPlayers(players.stream().toList())
+                        .teamBPlayers(new ArrayList<>())
+                        .teamAGuests(new ArrayList<>())
+                        .teamBGuests(new ArrayList<>())
+                        .closed(false)
+                        .build());
+
+        mockMvc
+                .perform(
+                        post("/v1/matches/" + match.getId() + "/captainA")
+                                .header("Authorization", "Bearer " + adminToken)
+                                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        var matchFromDB = matchRepository.findById(match.getId());
+
+        Assertions.assertNotEquals(matchFromDB.get().getCaptainTeamA(), members.get(2).getId());
+
+        matchRepository.deleteAll();
+        memberRepository.deleteAll(members);
+    }
+
+    @Test
+    @DisplayName("Add player to team B as captain")
+    void addPlayerTeamBAsCaptain() throws Exception {
+
+        if (adminToken == null) loginWithAdmin();
+
+        var members = memberRepository.saveAll(List.of(
+                MemberEntity.builder()
+                        .name("player")
+                        .surname("test")
+                        .password("test")
+                        .phone("")
+                        .role(Role.USER)
+                        .nCaptaincies(0)
+                        .build(),
+                MemberEntity.builder()
+                        .name("player1")
+                        .surname("test")
+                        .password("test")
+                        .phone("")
+                        .role(Role.USER)
+                        .nCaptaincies(0)
+                        .build(),
+                MemberEntity.builder()
+                        .name("player2")
+                        .surname("test")
+                        .password("test")
+                        .phone("")
+                        .role(Role.USER)
+                        .nCaptaincies(2)
+                        .build()
+        ));
+
+        var players = new HashSet<Long>();
+        players.add(members.get(0).getId());
+        players.add(members.get(1).getId());
+        players.add(members.get(2).getId());
+
+        var match =
+                matchRepository.save(MatchEntity.builder()
+                        .matchDay(LocalDate.now().plusDays(7))
+                        .confirmedPlayers(players)
+                        .notAvailablePlayers(new HashSet<>())
+                        .unConfirmedPlayers(new HashSet<>())
+                        .teamAPlayers(new ArrayList<>())
+                        .teamBPlayers(players.stream().toList())
+                        .teamAGuests(new ArrayList<>())
+                        .teamBGuests(new ArrayList<>())
+                        .closed(false)
+                        .build());
+
+        mockMvc
+                .perform(
+                        post("/v1/matches/" + match.getId() + "/captainB")
+                                .header("Authorization", "Bearer " + adminToken)
+                                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        var matchFromDB = matchRepository.findById(match.getId());
+
+        Assertions.assertNotEquals(matchFromDB.get().getCaptainTeamB(), members.get(2).getId());
+
+        matchRepository.deleteAll();
+        memberRepository.deleteAll(members);
     }
 }

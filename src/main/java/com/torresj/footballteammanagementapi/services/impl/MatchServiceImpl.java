@@ -15,10 +15,7 @@ import com.torresj.footballteammanagementapi.services.MatchService;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -101,6 +98,36 @@ public class MatchServiceImpl implements MatchService {
                         .memberId(member.getId())
                         .build())
                 .forEach(movementRepository::save);
+
+        if (match.getCaptainTeamA() != null) {
+            var captainA = memberRepository.findById(match.getCaptainTeamA());
+            captainA.ifPresent(member -> memberRepository.save(MemberEntity.builder()
+                    .id(member.getId())
+                    .nonce(member.getNonce())
+                    .phone(member.getPhone())
+                    .name(member.getName())
+                    .surname(member.getSurname())
+                    .injured(member.isInjured())
+                    .password(member.getPassword())
+                    .role(member.getRole())
+                    .nCaptaincies(member.getNCaptaincies() + 1)
+                    .build()));
+        }
+
+        if (match.getCaptainTeamB() != null) {
+            var captainB = memberRepository.findById(match.getCaptainTeamB());
+            captainB.ifPresent(member -> memberRepository.save(MemberEntity.builder()
+                    .id(member.getId())
+                    .nonce(member.getNonce())
+                    .phone(member.getPhone())
+                    .name(member.getName())
+                    .surname(member.getSurname())
+                    .injured(member.isInjured())
+                    .password(member.getPassword())
+                    .role(member.getRole())
+                    .nCaptaincies(member.getNCaptaincies() + 1)
+                    .build()));
+        }
     }
 
     @Override
@@ -223,6 +250,74 @@ public class MatchServiceImpl implements MatchService {
     }
 
     @Override
+    public void setRandomCaptainTeamA(long matchId) throws MatchNotFoundException {
+        var match = matchRepository.findById(matchId).orElseThrow(() -> new MatchNotFoundException(matchId));
+        int minimumCaptaincies = match.getTeamAPlayers().stream()
+                .map(memberRepository::findById)
+                .filter(Optional::isPresent)
+                .map(memberEntity -> memberEntity.get().getNCaptaincies())
+                .min(Comparator.naturalOrder()).orElse(0);
+
+        var listOfPossibleCaptains = match.getTeamAPlayers().stream()
+                .map(memberRepository::findById)
+                .filter(Optional::isPresent)
+                .filter(memberEntity -> memberEntity.get().getNCaptaincies() == minimumCaptaincies)
+                .map(Optional::get).toList();
+
+        matchRepository.save(
+                MatchEntity.builder()
+                        .id(match.getId())
+                        .matchDay(match.getMatchDay())
+                        .confirmedPlayers(match.getConfirmedPlayers())
+                        .notAvailablePlayers(match.getNotAvailablePlayers())
+                        .unConfirmedPlayers(match.getUnConfirmedPlayers())
+                        .teamAPlayers(match.getTeamAPlayers())
+                        .teamBPlayers(match.getTeamBPlayers())
+                        .teamAGuests(match.getTeamAGuests())
+                        .teamBGuests(match.getTeamBGuests())
+                        .captainTeamA(listOfPossibleCaptains.get(
+                                new Random().nextInt(listOfPossibleCaptains.size())).getId())
+                        .captainTeamB(match.getCaptainTeamB())
+                        .closed(match.isClosed())
+                        .build()
+        );
+    }
+
+    @Override
+    public void setRandomCaptainTeamB(long matchId) throws MatchNotFoundException {
+        var match = matchRepository.findById(matchId).orElseThrow(() -> new MatchNotFoundException(matchId));
+        int minimumCaptaincies = match.getTeamBPlayers().stream()
+                .map(memberRepository::findById)
+                .filter(Optional::isPresent)
+                .map(memberEntity -> memberEntity.get().getNCaptaincies())
+                .min(Comparator.naturalOrder()).orElse(0);
+
+        var listOfPossibleCaptains = match.getTeamBPlayers().stream()
+                .map(memberRepository::findById)
+                .filter(Optional::isPresent)
+                .filter(memberEntity -> memberEntity.get().getNCaptaincies() == minimumCaptaincies)
+                .map(Optional::get).toList();
+
+        matchRepository.save(
+                MatchEntity.builder()
+                        .id(match.getId())
+                        .matchDay(match.getMatchDay())
+                        .confirmedPlayers(match.getConfirmedPlayers())
+                        .notAvailablePlayers(match.getNotAvailablePlayers())
+                        .unConfirmedPlayers(match.getUnConfirmedPlayers())
+                        .teamAPlayers(match.getTeamAPlayers())
+                        .teamBPlayers(match.getTeamBPlayers())
+                        .teamAGuests(match.getTeamAGuests())
+                        .teamBGuests(match.getTeamBGuests())
+                        .captainTeamB(listOfPossibleCaptains.get(
+                                new Random().nextInt(listOfPossibleCaptains.size())).getId())
+                        .captainTeamA(match.getCaptainTeamA())
+                        .closed(match.isClosed())
+                        .build()
+        );
+    }
+
+    @Override
     public void delete(long id) {
         matchRepository.deleteById(id);
     }
@@ -258,6 +353,8 @@ public class MatchServiceImpl implements MatchService {
                 entity.getTeamBPlayers().stream().map(this::getPlayer).toList(),
                 entity.getTeamAGuests(),
                 entity.getTeamBGuests(),
+                entity.getCaptainTeamA() != null ? getPlayer(entity.getCaptainTeamA()) : null,
+                entity.getCaptainTeamA() != null ? getPlayer(entity.getCaptainTeamB()) : null,
                 entity.isClosed());
     }
 }

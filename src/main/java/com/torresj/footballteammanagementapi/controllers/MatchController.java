@@ -401,4 +401,52 @@ public class MatchController {
         log.info("[MATCHES] Guest removed");
         return ResponseEntity.ok().build();
     }
+
+    @Secured("ROLE_ADMIN")
+    @PostMapping("/{matchId}/captainA")
+    @SecurityRequirement(name = "Bearer Authentication")
+    @Operation(summary = "Add random player as captain to team A")
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Captain added",
+                            content = {@Content()}),
+                    @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content),
+                    @ApiResponse(responseCode = "403", description = "Forbidden", content = @Content),
+                    @ApiResponse(responseCode = "404", description = "Not found", content = @Content),
+            })
+    @SecurityRequirement(name = "Bearer Authentication")
+    ResponseEntity<Void> addPlayerAsCaptainToTeamA(
+            @Parameter(description = "Match id") @PathVariable long matchId)
+            throws MatchNotFoundException {
+        log.info("[MATCHES] Adding random player to team A as captain");
+        matchService.setRandomCaptainTeamA(matchId);
+        log.info("[MATCHES] Player added");
+        return ResponseEntity.ok().build();
+    }
+
+    @Secured("ROLE_ADMIN")
+    @PostMapping("/{matchId}/captainB")
+    @SecurityRequirement(name = "Bearer Authentication")
+    @Operation(summary = "Add random player as captain to team A")
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Captain added",
+                            content = {@Content()}),
+                    @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content),
+                    @ApiResponse(responseCode = "403", description = "Forbidden", content = @Content),
+                    @ApiResponse(responseCode = "404", description = "Not found", content = @Content),
+            })
+    @SecurityRequirement(name = "Bearer Authentication")
+    ResponseEntity<Void> addPlayerAsCaptainToTeamB(
+            @Parameter(description = "Match id") @PathVariable long matchId)
+            throws MatchNotFoundException {
+        log.info("[MATCHES] Adding random player to team B as captain");
+        matchService.setRandomCaptainTeamB(matchId);
+        log.info("[MATCHES] Player added");
+        return ResponseEntity.ok().build();
+    }
 }
