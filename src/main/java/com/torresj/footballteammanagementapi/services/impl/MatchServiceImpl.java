@@ -354,7 +354,7 @@ public class MatchServiceImpl implements MatchService {
                 entity.getTeamAGuests(),
                 entity.getTeamBGuests(),
                 entity.getCaptainTeamA() != null ? getPlayer(entity.getCaptainTeamA()) : null,
-                entity.getCaptainTeamA() != null ? getPlayer(entity.getCaptainTeamB()) : null,
+                entity.getCaptainTeamB() != null ? getPlayer(entity.getCaptainTeamB()) : null,
                 entity.isClosed());
     }
 }
