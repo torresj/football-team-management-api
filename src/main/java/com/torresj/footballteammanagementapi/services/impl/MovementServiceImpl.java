@@ -1,5 +1,6 @@
 package com.torresj.footballteammanagementapi.services.impl;
 
+import com.torresj.footballteammanagementapi.dtos.MemberDto;
 import com.torresj.footballteammanagementapi.dtos.MovementDto;
 import com.torresj.footballteammanagementapi.entities.MovementEntity;
 import com.torresj.footballteammanagementapi.enums.MovementType;
@@ -13,6 +14,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -21,6 +23,9 @@ public class MovementServiceImpl implements MovementService {
 
     private final MovementRepository movementRepository;
     private final MemberRepository memberRepository;
+
+    @Value("${admin.user}")
+    private final String adminUser;
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @Override
@@ -150,5 +155,20 @@ public class MovementServiceImpl implements MovementService {
     @Override
     public void delete(long id) {
         movementRepository.deleteById(id);
+    }
+
+    @Override
+    public void addAnnualTeamPay() {
+        memberRepository.findAll().stream()
+                .filter(member -> !adminUser.equals(member.getName()))
+                .forEach(member -> movementRepository.save(
+                                MovementEntity.builder()
+                                        .type(MovementType.EXPENSE)
+                                        .amount(-70)
+                                        .memberId(member.getId())
+                                        .description("Cuota anual de la peña")
+                                        .build()
+                        )
+                );
     }
 }

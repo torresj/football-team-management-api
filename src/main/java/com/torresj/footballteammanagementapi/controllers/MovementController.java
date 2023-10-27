@@ -158,4 +158,22 @@ public class MovementController {
     log.info("[MOVEMENTS] Movement " + id + " deleted");
     return ResponseEntity.ok().build();
   }
+
+  @Secured("ROLE_ADMIN")
+  @PostMapping("/annualpay")
+  @Operation(summary = "Add annual pay to every member")
+  @ApiResponses(
+          value = {
+                  @ApiResponse(
+                          responseCode = "200",
+                          description = "Movements added",
+                          content = {@Content()})
+          })
+  @SecurityRequirement(name = "Bearer Authentication")
+  ResponseEntity<Void> annualPay() {
+    log.info("[MOVEMENTS] Adding annual pay");
+    movementService.addAnnualTeamPay();
+    log.info("[MOVEMENTS] Movements added");
+    return ResponseEntity.ok().build();
+  }
 }

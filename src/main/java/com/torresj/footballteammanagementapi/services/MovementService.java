@@ -22,4 +22,6 @@ public interface MovementService {
       throws MovementNotFoundException, MemberNotFoundException;
 
   void delete(long id);
+
+  void addAnnualTeamPay();
 }
