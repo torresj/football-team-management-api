@@ -205,16 +205,52 @@ public class MatchServiceImpl implements MatchService {
     public void removePlayerFromTeamA(long matchId, long playerId) throws MatchNotFoundException {
         var match = matchRepository.findById(matchId).orElseThrow(() -> new MatchNotFoundException(matchId));
         match.getTeamAPlayers().remove(playerId);
-
-        matchRepository.save(match);
+        if (match.getCaptainTeamA() != null && match.getCaptainTeamA() == playerId) {
+            matchRepository.save(
+                    MatchEntity.builder()
+                            .id(match.getId())
+                            .matchDay(match.getMatchDay())
+                            .confirmedPlayers(match.getConfirmedPlayers())
+                            .notAvailablePlayers(match.getNotAvailablePlayers())
+                            .unConfirmedPlayers(match.getUnConfirmedPlayers())
+                            .teamAPlayers(match.getTeamAPlayers())
+                            .teamBPlayers(match.getTeamBPlayers())
+                            .teamAGuests(match.getTeamAGuests())
+                            .teamBGuests(match.getTeamBGuests())
+                            .captainTeamA(null)
+                            .captainTeamB(match.getCaptainTeamB())
+                            .closed(match.isClosed())
+                            .build()
+            );
+        } else {
+            matchRepository.save(match);
+        }
     }
 
     @Override
     public void removePlayerFromTeamB(long matchId, long playerId) throws MatchNotFoundException {
         var match = matchRepository.findById(matchId).orElseThrow(() -> new MatchNotFoundException(matchId));
         match.getTeamBPlayers().remove(playerId);
-
-        matchRepository.save(match);
+        if (match.getCaptainTeamB() != null && match.getCaptainTeamB() == playerId) {
+            matchRepository.save(
+                    MatchEntity.builder()
+                            .id(match.getId())
+                            .matchDay(match.getMatchDay())
+                            .confirmedPlayers(match.getConfirmedPlayers())
+                            .notAvailablePlayers(match.getNotAvailablePlayers())
+                            .unConfirmedPlayers(match.getUnConfirmedPlayers())
+                            .teamAPlayers(match.getTeamAPlayers())
+                            .teamBPlayers(match.getTeamBPlayers())
+                            .teamAGuests(match.getTeamAGuests())
+                            .teamBGuests(match.getTeamBGuests())
+                            .captainTeamB(null)
+                            .captainTeamA(match.getCaptainTeamA())
+                            .closed(match.isClosed())
+                            .build()
+            );
+        } else {
+            matchRepository.save(match);
+        }
     }
 
     @Override
@@ -253,7 +289,7 @@ public class MatchServiceImpl implements MatchService {
     public void setRandomCaptainTeamA(long matchId) throws MatchNotFoundException {
         var match = matchRepository.findById(matchId).orElseThrow(() -> new MatchNotFoundException(matchId));
 
-        if(match.getTeamAPlayers().isEmpty()){
+        if (match.getTeamAPlayers().isEmpty()) {
             return;
         }
 
@@ -292,7 +328,7 @@ public class MatchServiceImpl implements MatchService {
     public void setRandomCaptainTeamB(long matchId) throws MatchNotFoundException {
         var match = matchRepository.findById(matchId).orElseThrow(() -> new MatchNotFoundException(matchId));
 
-        if(match.getTeamBPlayers().isEmpty()){
+        if (match.getTeamBPlayers().isEmpty()) {
             return;
         }
 
