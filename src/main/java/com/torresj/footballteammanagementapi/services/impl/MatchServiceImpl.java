@@ -252,6 +252,11 @@ public class MatchServiceImpl implements MatchService {
     @Override
     public void setRandomCaptainTeamA(long matchId) throws MatchNotFoundException {
         var match = matchRepository.findById(matchId).orElseThrow(() -> new MatchNotFoundException(matchId));
+
+        if(match.getTeamAPlayers().isEmpty()){
+            return;
+        }
+
         int minimumCaptaincies = match.getTeamAPlayers().stream()
                 .map(memberRepository::findById)
                 .filter(Optional::isPresent)
@@ -286,6 +291,11 @@ public class MatchServiceImpl implements MatchService {
     @Override
     public void setRandomCaptainTeamB(long matchId) throws MatchNotFoundException {
         var match = matchRepository.findById(matchId).orElseThrow(() -> new MatchNotFoundException(matchId));
+
+        if(match.getTeamBPlayers().isEmpty()){
+            return;
+        }
+
         int minimumCaptaincies = match.getTeamBPlayers().stream()
                 .map(memberRepository::findById)
                 .filter(Optional::isPresent)
