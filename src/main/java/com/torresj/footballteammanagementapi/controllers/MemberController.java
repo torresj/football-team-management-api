@@ -214,35 +214,6 @@ public class MemberController {
         return ResponseEntity.ok().build();
     }
 
-    @PatchMapping("/me")
-    @Operation(summary = "Update Member password")
-    @ApiResponses(
-            value = {
-                    @ApiResponse(
-                            responseCode = "200",
-                            description = "Password updated",
-                            content = {@Content()}),
-                    @ApiResponse(
-                            responseCode = "404",
-                            description = "Member Not Found",
-                            content = {@Content()})
-            })
-    @SecurityRequirement(name = "Bearer Authentication")
-    ResponseEntity<Void> updatePassword(
-            Principal principal,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    description = "Update Member password",
-                    required = true,
-                    content = @Content(schema = @Schema(implementation = UpdatePasswordDto.class)))
-            @RequestBody
-            UpdatePasswordDto request)
-            throws MemberNotFoundException {
-        log.info("[MEMBERS] Updating user " + principal.getName());
-        memberService.updateMyPassword(principal.getName(), encoder.encode(request.newPassword()));
-        log.info("[MEMBERS] Member updated");
-        return ResponseEntity.ok().build();
-    }
-
     @PatchMapping("/me/password")
     @Operation(summary = "Update Member password")
     @ApiResponses(

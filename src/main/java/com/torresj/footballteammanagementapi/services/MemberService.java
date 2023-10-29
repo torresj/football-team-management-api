@@ -14,7 +14,6 @@ public interface MemberService {
     List<MemberDto> get();
     MemberDto update(long id, String name, String surname, String phone, int nCaptaincies, Role role) throws MemberNotFoundException;
     MemberDto create(String name, String surname, String phone, String password, Role role) throws MemberAlreadyExistsException;
-    void updatePassword(long id, String newPassword) throws MemberNotFoundException;
     void updateMyPassword(String user, String newPassword) throws MemberNotFoundException;
     void delete(long id);
 }

@@ -434,29 +434,12 @@ public class MemberControllerTest {
 
         mockMvc
                 .perform(
-                        patch("/v1/members/me")
+                        patch("/v1/members/me/password")
                                 .header("Authorization", "Bearer " + token)
                                 .accept(MediaType.APPLICATION_JSON)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(updateDto)))
                 .andExpect(status().isOk());
-    }
-
-    @Test
-    @DisplayName("Update password member without admin role")
-    void updateMemberPasswordWithoutAdminRole() throws Exception {
-        var updateDto = new UpdatePasswordDto("test2");
-
-        if (token == null) loginWithUser("User3");
-
-        mockMvc
-                .perform(
-                        put("/v1/members/" + new Random().nextInt())
-                                .header("Authorization", "Bearer " + token)
-                                .accept(MediaType.APPLICATION_JSON)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(updateDto)))
-                .andExpect(status().isForbidden());
     }
 
     @Test
