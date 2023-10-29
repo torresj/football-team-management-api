@@ -9,7 +9,6 @@ import org.springframework.data.domain.Page;
 import java.util.List;
 
 public interface MovementService {
-  List<MovementDto> get();
   Page<MovementDto> get(Long memberId, String filter, int nElements, int nPage);
 
   MovementDto get(long id) throws MovementNotFoundException;

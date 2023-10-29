@@ -32,27 +32,6 @@ public class MovementServiceImpl implements MovementService {
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @Override
-    public List<MovementDto> get() {
-        return movementRepository.findAll().stream()
-                .map(
-                        entity -> {
-                            var member = memberRepository.findById(entity.getMemberId());
-                            String memberName =
-                                    member
-                                            .map(memberEntity -> memberEntity.getName() + " " + memberEntity.getSurname())
-                                            .orElse("Not found");
-                            return new MovementDto(
-                                    entity.getId(),
-                                    entity.getType(),
-                                    memberName,
-                                    entity.getAmount(),
-                                    entity.getDescription(),
-                                    formatter.format(entity.getCreatedOn()));
-                        })
-                .toList();
-    }
-
-    @Override
     public Page<MovementDto> get(Long memberId, String filter, int nElements, int nPage) {
         var pageRequest = PageRequest.of(nPage, nElements);
         Page<MovementEntity> pageEntity;
