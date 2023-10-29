@@ -16,11 +16,13 @@ import com.torresj.footballteammanagementapi.repositories.MovementRepository;
 
 import java.util.List;
 
+import org.json.JSONObject;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
@@ -109,7 +111,7 @@ public class MovementControllerTest {
     }
 
     @Test
-    @DisplayName("Get all movements")
+    @DisplayName("Get all movements without filters")
     void getAllMovements() throws Exception {
         movementRepository.saveAll(
                 List.of(
@@ -142,17 +144,157 @@ public class MovementControllerTest {
 
         var result =
                 mockMvc
-                        .perform(get("/v1/movements").header("Authorization", "Bearer " + adminToken))
+                        .perform(get("/v1/movements?elements=2&page=0").header("Authorization", "Bearer " + adminToken))
                         .andExpect(status().isOk());
 
         var content = result.andReturn().getResponse().getContentAsString();
         List<MovementDto> movements =
-                objectMapper.readValue(content, new TypeReference<>() {
+                objectMapper.readValue(new JSONObject(content).getString("content"), new TypeReference<>() {
                 });
 
-        Assertions.assertTrue(movements.size() >= 4);
+        Assertions.assertEquals(2, movements.size());
         movementRepository.deleteAll();
     }
+
+    @Test
+    @DisplayName("Get all movements with filter")
+    void getAllMovementsWithFilter() throws Exception {
+        movementRepository.saveAll(
+                List.of(
+                        MovementEntity.builder()
+                                .amount(-10)
+                                .type(MovementType.EXPENSE)
+                                .description("test1")
+                                .memberId(1)
+                                .build(),
+                        MovementEntity.builder()
+                                .amount(10)
+                                .type(MovementType.INCOME)
+                                .description("test2")
+                                .memberId(1)
+                                .build(),
+                        MovementEntity.builder()
+                                .amount(-10)
+                                .type(MovementType.EXPENSE)
+                                .description("t")
+                                .memberId(2)
+                                .build(),
+                        MovementEntity.builder()
+                                .amount(10)
+                                .type(MovementType.INCOME)
+                                .description("t")
+                                .memberId(2)
+                                .build()));
+
+        if (adminToken == null) loginWithAdmin();
+
+        var result =
+                mockMvc
+                        .perform(get("/v1/movements?elements=4&page=0&filter=test").header("Authorization", "Bearer " + adminToken))
+                        .andExpect(status().isOk());
+
+        var content = result.andReturn().getResponse().getContentAsString();
+        List<MovementDto> movements =
+                objectMapper.readValue(new JSONObject(content).getString("content"), new TypeReference<>() {
+                });
+
+        Assertions.assertEquals(2, movements.size());
+        movementRepository.deleteAll();
+    }
+
+    @Test
+    @DisplayName("Get all movements with memberId")
+    void getAllMovementsWithMemberId() throws Exception {
+        movementRepository.saveAll(
+                List.of(
+                        MovementEntity.builder()
+                                .amount(-10)
+                                .type(MovementType.EXPENSE)
+                                .description("test1")
+                                .memberId(1)
+                                .build(),
+                        MovementEntity.builder()
+                                .amount(10)
+                                .type(MovementType.INCOME)
+                                .description("test2")
+                                .memberId(1)
+                                .build(),
+                        MovementEntity.builder()
+                                .amount(-10)
+                                .type(MovementType.EXPENSE)
+                                .description("t")
+                                .memberId(2)
+                                .build(),
+                        MovementEntity.builder()
+                                .amount(10)
+                                .type(MovementType.INCOME)
+                                .description("t")
+                                .memberId(2)
+                                .build()));
+
+        if (adminToken == null) loginWithAdmin();
+
+        var result =
+                mockMvc
+                        .perform(get("/v1/movements?elements=4&page=0&memberId=2").header("Authorization", "Bearer " + adminToken))
+                        .andExpect(status().isOk());
+
+        var content = result.andReturn().getResponse().getContentAsString();
+        List<MovementDto> movements =
+                objectMapper.readValue(new JSONObject(content).getString("content"), new TypeReference<>() {
+                });
+
+        Assertions.assertEquals(2, movements.size());
+        movementRepository.deleteAll();
+    }
+
+    @Test
+    @DisplayName("Get all movements with memberId")
+    void getAllMovementsWithMemberIdAndFilter() throws Exception {
+        movementRepository.saveAll(
+                List.of(
+                        MovementEntity.builder()
+                                .amount(-10)
+                                .type(MovementType.EXPENSE)
+                                .description("test1")
+                                .memberId(1)
+                                .build(),
+                        MovementEntity.builder()
+                                .amount(10)
+                                .type(MovementType.INCOME)
+                                .description("test2")
+                                .memberId(1)
+                                .build(),
+                        MovementEntity.builder()
+                                .amount(-10)
+                                .type(MovementType.EXPENSE)
+                                .description("no description")
+                                .memberId(2)
+                                .build(),
+                        MovementEntity.builder()
+                                .amount(10)
+                                .type(MovementType.INCOME)
+                                .description("No description")
+                                .memberId(2)
+                                .build()));
+
+        if (adminToken == null) loginWithAdmin();
+
+        var result =
+                mockMvc
+                        .perform(get("/v1/movements?elements=4&page=0&memberId=1&filter=te").header("Authorization", "Bearer " + adminToken))
+                        .andExpect(status().isOk());
+
+        var content = result.andReturn().getResponse().getContentAsString();
+        List<MovementDto> movements =
+                objectMapper.readValue(new JSONObject(content).getString("content"), new TypeReference<>() {
+                });
+
+        Assertions.assertEquals(2, movements.size());
+        movementRepository.deleteAll();
+    }
+
+
 
     @Test
     @DisplayName("Get all movements without role admin")
@@ -161,7 +303,7 @@ public class MovementControllerTest {
         if (token == null) loginWithUser("testUser");
 
         mockMvc
-                .perform(get("/v1/movements").header("Authorization", "Bearer " + token))
+                .perform(get("/v1/movements?elements=2&page=0").header("Authorization", "Bearer " + token))
                 .andExpect(status().isForbidden());
     }
 

@@ -15,6 +15,9 @@ import java.util.List;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -50,43 +53,35 @@ public class MovementServiceImpl implements MovementService {
     }
 
     @Override
+    public Page<MovementDto> get(Long memberId, String filter, int nElements, int nPage) {
+        var pageRequest = PageRequest.of(nPage, nElements);
+        Page<MovementEntity> pageEntity;
+        if (memberId == null && filter == null) {
+            pageEntity = movementRepository.findAll(pageRequest);
+        } else if (memberId != null && filter == null) {
+            pageEntity = movementRepository.findByMemberId(memberId, pageRequest);
+        } else if (memberId == null) {
+            pageEntity = movementRepository.findByDescriptionContainingIgnoreCase(filter, pageRequest);
+        } else {
+            pageEntity = movementRepository
+                    .findByMemberIdAndDescriptionContainingIgnoreCase(memberId, filter, pageRequest);
+        }
+
+        return pageEntity.map(this::entityToDto);
+    }
+
+    @Override
     public MovementDto get(long id) throws MovementNotFoundException {
         var movement =
                 movementRepository.findById(id).orElseThrow(() -> new MovementNotFoundException(id));
-        var member = memberRepository.findById(movement.getMemberId());
-        String memberName =
-                member
-                        .map(memberEntity -> memberEntity.getName() + " " + memberEntity.getSurname())
-                        .orElse("Not found");
-
-        return new MovementDto(
-                movement.getId(),
-                movement.getType(),
-                memberName,
-                movement.getAmount(),
-                movement.getDescription(),
-                formatter.format(movement.getCreatedOn()));
+        return entityToDto(movement);
     }
 
     @Override
     public List<MovementDto> getByMember(long memberId) throws MemberNotFoundException {
         memberRepository.findById(memberId).orElseThrow(() -> new MemberNotFoundException(""));
         return movementRepository.findByMemberId(memberId).stream()
-                .map(
-                        movementEntity -> {
-                            var member = memberRepository.findById(movementEntity.getMemberId());
-                            String memberName =
-                                    member
-                                            .map(memberEntity -> memberEntity.getName() + " " + memberEntity.getSurname())
-                                            .orElse("Not found");
-                            return new MovementDto(
-                                    movementEntity.getId(),
-                                    movementEntity.getType(),
-                                    memberName,
-                                    movementEntity.getAmount(),
-                                    movementEntity.getDescription(),
-                                    formatter.format(movementEntity.getCreatedOn()));
-                        })
+                .map(this::entityToDto)
                 .toList();
     }
 
@@ -170,5 +165,20 @@ public class MovementServiceImpl implements MovementService {
                                         .build()
                         )
                 );
+    }
+
+    private MovementDto entityToDto(MovementEntity entity) {
+        var member = memberRepository.findById(entity.getMemberId());
+        String memberName =
+                member
+                        .map(memberEntity -> memberEntity.getName() + " " + memberEntity.getSurname())
+                        .orElse("Not found");
+        return new MovementDto(
+                entity.getId(),
+                entity.getType(),
+                memberName,
+                entity.getAmount(),
+                entity.getDescription(),
+                formatter.format(entity.getCreatedOn()));
     }
 }
