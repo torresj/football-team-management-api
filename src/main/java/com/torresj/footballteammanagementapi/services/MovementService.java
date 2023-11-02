@@ -1,6 +1,7 @@
 package com.torresj.footballteammanagementapi.services;
 
 import com.torresj.footballteammanagementapi.dtos.MovementDto;
+import com.torresj.footballteammanagementapi.dtos.TotalBalanceDto;
 import com.torresj.footballteammanagementapi.enums.MovementType;
 import com.torresj.footballteammanagementapi.exceptions.MemberNotFoundException;
 import com.torresj.footballteammanagementapi.exceptions.MovementNotFoundException;
@@ -26,4 +27,6 @@ public interface MovementService {
   void delete(long id);
 
   void addAnnualTeamPay();
+
+  TotalBalanceDto getTotalBalance();
 }

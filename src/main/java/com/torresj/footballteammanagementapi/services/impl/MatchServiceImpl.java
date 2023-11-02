@@ -1,7 +1,7 @@
 package com.torresj.footballteammanagementapi.services.impl;
 
 import com.torresj.footballteammanagementapi.dtos.MatchDto;
-import com.torresj.footballteammanagementapi.dtos.MatchPlayer;
+import com.torresj.footballteammanagementapi.dtos.MatchPlayerDto;
 import com.torresj.footballteammanagementapi.entities.MatchEntity;
 import com.torresj.footballteammanagementapi.entities.MemberEntity;
 import com.torresj.footballteammanagementapi.entities.MovementEntity;
@@ -379,9 +379,9 @@ public class MatchServiceImpl implements MatchService {
         });
     }
 
-    private MatchPlayer getPlayer(long playerId) {
+    private MatchPlayerDto getPlayer(long playerId) {
         var member = memberRepository.findById(playerId);
-        return new MatchPlayer(
+        return new MatchPlayerDto(
                 playerId,
                 member
                         .map(memberEntity -> memberEntity.getName() + " " + memberEntity.getSurname())

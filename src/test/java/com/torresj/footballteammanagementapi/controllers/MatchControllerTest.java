@@ -593,7 +593,7 @@ public class MatchControllerTest {
                         .closed(false)
                         .build());
 
-        var request = new AddPlayerRequest(PlayerMatchStatus.AVAILABLE);
+        var request = new AddPlayerRequestDto(PlayerMatchStatus.AVAILABLE);
 
         mockMvc
                 .perform(
@@ -635,7 +635,7 @@ public class MatchControllerTest {
                         .closed(false)
                         .build());
 
-        var request = new AddPlayerRequest(PlayerMatchStatus.NOT_AVAILABLE);
+        var request = new AddPlayerRequestDto(PlayerMatchStatus.NOT_AVAILABLE);
 
         mockMvc
                 .perform(
@@ -661,7 +661,7 @@ public class MatchControllerTest {
 
         if (token == null) loginWithUser("MatchUser10");
 
-        var request = new AddPlayerRequest(PlayerMatchStatus.NOT_AVAILABLE);
+        var request = new AddPlayerRequestDto(PlayerMatchStatus.NOT_AVAILABLE);
 
         mockMvc
                 .perform(
@@ -1097,7 +1097,7 @@ public class MatchControllerTest {
                         .closed(false)
                         .build());
 
-        var request = new GuestRequest("guest");
+        var request = new GuestRequestDto("guest");
 
         mockMvc
                 .perform(
@@ -1134,7 +1134,7 @@ public class MatchControllerTest {
                         .closed(false)
                         .build());
 
-        var request = new GuestRequest("guest");
+        var request = new GuestRequestDto("guest");
 
         mockMvc
                 .perform(
@@ -1171,7 +1171,7 @@ public class MatchControllerTest {
                         .closed(false)
                         .build());
 
-        var request = new GuestRequest("guest");
+        var request = new GuestRequestDto("guest");
 
         mockMvc
                 .perform(
@@ -1208,7 +1208,7 @@ public class MatchControllerTest {
                         .closed(false)
                         .build());
 
-        var request = new GuestRequest("guest");
+        var request = new GuestRequestDto("guest");
 
         mockMvc
                 .perform(
@@ -1232,7 +1232,7 @@ public class MatchControllerTest {
 
         if (token == null) loginWithUser("MatchUser13");
 
-        var request = new GuestRequest("guest");
+        var request = new GuestRequestDto("guest");
 
         mockMvc
                 .perform(
@@ -1251,7 +1251,7 @@ public class MatchControllerTest {
 
         if (token == null) loginWithUser("MatchUser14");
 
-        var request = new GuestRequest("guest");
+        var request = new GuestRequestDto("guest");
 
         mockMvc
                 .perform(
@@ -1270,7 +1270,7 @@ public class MatchControllerTest {
 
         if (token == null) loginWithUser("MatchUser15");
 
-        var request = new GuestRequest("guest");
+        var request = new GuestRequestDto("guest");
 
         mockMvc
                 .perform(
@@ -1289,7 +1289,7 @@ public class MatchControllerTest {
 
         if (token == null) loginWithUser("MatchUser16");
 
-        var request = new GuestRequest("guest");
+        var request = new GuestRequestDto("guest");
 
         mockMvc
                 .perform(

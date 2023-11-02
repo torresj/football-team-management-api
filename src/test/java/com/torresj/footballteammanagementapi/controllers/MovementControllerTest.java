@@ -462,6 +462,55 @@ public class MovementControllerTest {
     }
 
     @Test
+    @DisplayName("Get total balance")
+    void getTotalBalance() throws Exception {
+
+        var movements = movementRepository.saveAll(
+                List.of(
+                        MovementEntity.builder()
+                                .amount(-1)
+                                .type(MovementType.EXPENSE)
+                                .description("")
+                                .memberId(1)
+                                .build(),
+                        MovementEntity.builder()
+                                .amount(2)
+                                .type(MovementType.INCOME)
+                                .description("")
+                                .memberId(1)
+                                .build(),
+                        MovementEntity.builder()
+                                .amount(-3)
+                                .type(MovementType.EXPENSE)
+                                .description("")
+                                .memberId(2)
+                                .build(),
+                        MovementEntity.builder()
+                                .amount(7)
+                                .type(MovementType.INCOME)
+                                .description("")
+                                .memberId(2)
+                                .build()));
+
+
+        if (token == null) loginWithUser("testUser6");
+
+        var result = mockMvc
+                .perform(
+                        get("/v1/movements/balance")
+                                .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk());
+
+        var content = result.andReturn().getResponse().getContentAsString();
+        TotalBalanceDto response = objectMapper.readValue(content, TotalBalanceDto.class);
+
+        Assertions.assertEquals(-4, response.totalExpenses());
+        Assertions.assertEquals(9, response.totalIncomes());
+
+        movementRepository.deleteAll(movements);
+    }
+
+    @Test
     @DisplayName("Delete movement")
     void deleteMovement() throws Exception {
         var entity =
@@ -489,7 +538,7 @@ public class MovementControllerTest {
     @DisplayName("Delete movement no admin role")
     void deleteMovementNotAdminRole() throws Exception {
 
-        if (token == null) loginWithUser("testUser6");
+        if (token == null) loginWithUser("testUser7");
 
         mockMvc
                 .perform(delete("/v1/movements/1234").header("Authorization", "Bearer " + token))

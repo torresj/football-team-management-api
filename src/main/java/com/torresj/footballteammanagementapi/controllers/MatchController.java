@@ -1,7 +1,7 @@
 package com.torresj.footballteammanagementapi.controllers;
 
-import com.torresj.footballteammanagementapi.dtos.GuestRequest;
-import com.torresj.footballteammanagementapi.dtos.AddPlayerRequest;
+import com.torresj.footballteammanagementapi.dtos.GuestRequestDto;
+import com.torresj.footballteammanagementapi.dtos.AddPlayerRequestDto;
 import com.torresj.footballteammanagementapi.dtos.CreateMatchDto;
 import com.torresj.footballteammanagementapi.dtos.MatchDto;
 import com.torresj.footballteammanagementapi.exceptions.*;
@@ -179,8 +179,8 @@ public class MatchController {
                                    @io.swagger.v3.oas.annotations.parameters.RequestBody(
                                            description = "Player status for this match",
                                            required = true,
-                                           content = @Content(schema = @Schema(implementation = AddPlayerRequest.class)))
-                                   @RequestBody AddPlayerRequest request, Principal principal)
+                                           content = @Content(schema = @Schema(implementation = AddPlayerRequestDto.class)))
+                                   @RequestBody AddPlayerRequestDto request, Principal principal)
             throws MatchNotFoundException, MemberNotFoundException {
         log.info("[MATCHES] Adding player " + principal.getName() + " to match " + id);
         matchService.addPlayer(id, request.status(), principal.getName());
@@ -308,8 +308,8 @@ public class MatchController {
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     description = "Add guest",
                     required = true,
-                    content = @Content(schema = @Schema(implementation = GuestRequest.class)))
-            @RequestBody GuestRequest request) throws MatchNotFoundException {
+                    content = @Content(schema = @Schema(implementation = GuestRequestDto.class)))
+            @RequestBody GuestRequestDto request) throws MatchNotFoundException {
         log.info("[MATCHES] Adding guest " + request.guest() + " to team A");
         matchService.addGuestToTeamA(matchId, request.guest());
         log.info("[MATCHES] Guest added");
@@ -336,8 +336,8 @@ public class MatchController {
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     description = "Add guest",
                     required = true,
-                    content = @Content(schema = @Schema(implementation = GuestRequest.class)))
-            @RequestBody GuestRequest request) throws MatchNotFoundException {
+                    content = @Content(schema = @Schema(implementation = GuestRequestDto.class)))
+            @RequestBody GuestRequestDto request) throws MatchNotFoundException {
         log.info("[MATCHES] Adding guest " + request.guest() + " to team B");
         matchService.addGuestToTeamB(matchId, request.guest());
         log.info("[MATCHES] Guest added");
@@ -364,8 +364,8 @@ public class MatchController {
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     description = "Remove guest",
                     required = true,
-                    content = @Content(schema = @Schema(implementation = GuestRequest.class)))
-            @RequestBody GuestRequest request)
+                    content = @Content(schema = @Schema(implementation = GuestRequestDto.class)))
+            @RequestBody GuestRequestDto request)
             throws MatchNotFoundException {
         log.info("[MATCHES] Removing guest " + request.guest() + " from team A");
         matchService.removeGuestFromTeamA(matchId, request.guest());
@@ -393,8 +393,8 @@ public class MatchController {
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     description = "Remove guest",
                     required = true,
-                    content = @Content(schema = @Schema(implementation = GuestRequest.class)))
-            @RequestBody GuestRequest request)
+                    content = @Content(schema = @Schema(implementation = GuestRequestDto.class)))
+            @RequestBody GuestRequestDto request)
             throws MatchNotFoundException {
         log.info("[MATCHES] Removing guest " + request.guest() + " from team B");
         matchService.removeGuestFromTeamB(matchId, request.guest());

@@ -1,6 +1,7 @@
 package com.torresj.footballteammanagementapi.services.impl;
 
 import com.torresj.footballteammanagementapi.dtos.MovementDto;
+import com.torresj.footballteammanagementapi.dtos.TotalBalanceDto;
 import com.torresj.footballteammanagementapi.entities.MovementEntity;
 import com.torresj.footballteammanagementapi.enums.MovementType;
 import com.torresj.footballteammanagementapi.exceptions.MemberNotFoundException;
@@ -143,6 +144,20 @@ public class MovementServiceImpl implements MovementService {
                                         .build()
                         )
                 );
+    }
+
+    @Override
+    public TotalBalanceDto getTotalBalance() {
+        List<MovementEntity> movements = movementRepository.findAll();
+        double totalExpenses = movements.stream()
+                .filter(movement -> movement.getType() == MovementType.EXPENSE)
+                .mapToDouble(MovementEntity::getAmount)
+                .sum();
+        double totalIncomes = movements.stream()
+                .filter(movement -> movement.getType() == MovementType.INCOME)
+                .mapToDouble(MovementEntity::getAmount)
+                .sum();
+        return new TotalBalanceDto(totalExpenses, totalIncomes);
     }
 
     private MovementDto entityToDto(MovementEntity entity) {

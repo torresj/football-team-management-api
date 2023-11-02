@@ -88,6 +88,7 @@ public class MovementController {
         return ResponseEntity.ok(movement);
     }
 
+
     @Secured("ROLE_ADMIN")
     @PostMapping
     @Operation(summary = "Create Movement")
@@ -187,5 +188,29 @@ public class MovementController {
         movementService.addAnnualTeamPay();
         log.info("[MOVEMENTS] Movements added");
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/balance")
+    @SecurityRequirement(name = "Bearer Authentication")
+    @Operation(summary = "Get total balance")
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Ok",
+                            content = {
+                                    @Content(
+                                            mediaType = "application/json",
+                                            schema = @Schema(implementation = TotalBalanceDto.class))
+                            }),
+                    @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content),
+                    @ApiResponse(responseCode = "403", description = "Forbidden", content = @Content)
+            })
+    @SecurityRequirement(name = "Bearer Authentication")
+    ResponseEntity<TotalBalanceDto> get() {
+        log.info("[MOVEMENTS] Getting balance");
+        var balance = movementService.getTotalBalance();
+        log.info("[MOVEMENTS] Balance found");
+        return ResponseEntity.ok(balance);
     }
 }
