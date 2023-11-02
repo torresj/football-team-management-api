@@ -22,7 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
@@ -295,7 +295,6 @@ public class MovementControllerTest {
     }
 
 
-
     @Test
     @DisplayName("Get all movements without role admin")
     void getAllMovementsNoRoleAdmin() throws Exception {
@@ -357,7 +356,7 @@ public class MovementControllerTest {
                                 .content(objectMapper.writeValueAsString(movement)))
                 .andExpect(status().isCreated());
 
-        Assertions.assertFalse(movementRepository.findByMemberId(1).isEmpty());
+        Assertions.assertFalse(movementRepository.findByMemberId(1, Sort.by(Sort.Direction.DESC, "createdOn")).isEmpty());
 
         movementRepository.deleteAll();
     }

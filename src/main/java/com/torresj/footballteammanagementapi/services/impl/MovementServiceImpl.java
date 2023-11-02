@@ -1,6 +1,5 @@
 package com.torresj.footballteammanagementapi.services.impl;
 
-import com.torresj.footballteammanagementapi.dtos.MemberDto;
 import com.torresj.footballteammanagementapi.dtos.MovementDto;
 import com.torresj.footballteammanagementapi.entities.MovementEntity;
 import com.torresj.footballteammanagementapi.enums.MovementType;
@@ -16,8 +15,8 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -33,7 +32,7 @@ public class MovementServiceImpl implements MovementService {
 
     @Override
     public Page<MovementDto> get(Long memberId, String filter, int nElements, int nPage) {
-        var pageRequest = PageRequest.of(nPage, nElements);
+        var pageRequest = PageRequest.of(nPage, nElements, Sort.by(Sort.Direction.DESC, "createdOn"));
         Page<MovementEntity> pageEntity;
         if (memberId == null && filter == null) {
             pageEntity = movementRepository.findAll(pageRequest);
@@ -59,14 +58,14 @@ public class MovementServiceImpl implements MovementService {
     @Override
     public List<MovementDto> getByMember(long memberId) throws MemberNotFoundException {
         memberRepository.findById(memberId).orElseThrow(() -> new MemberNotFoundException(""));
-        return movementRepository.findByMemberId(memberId).stream()
+        return movementRepository.findByMemberId(memberId, Sort.by(Sort.Direction.DESC, "createdOn")).stream()
                 .map(this::entityToDto)
                 .toList();
     }
 
     @Override
     public double getBalance(long memberId) {
-        return movementRepository.findByMemberId(memberId).stream()
+        return movementRepository.findByMemberId(memberId, Sort.by(Sort.Direction.DESC, "createdOn")).stream()
                 .mapToDouble(MovementEntity::getAmount)
                 .sum();
     }

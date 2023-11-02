@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
@@ -277,34 +278,33 @@ public class MatchControllerTest {
     @Test
     @DisplayName("Get next match not created yet")
     void getNextMatchNotCreatedYet() throws Exception {
-        var matches =
-                matchRepository.saveAll(List.of(MatchEntity.builder()
-                        .matchDay(LocalDate.now().minusDays(7))
-                        .confirmedPlayers(new HashSet<>())
-                        .notAvailablePlayers(new HashSet<>())
-                        .unConfirmedPlayers(
-                                memberRepository.findAll().stream()
-                                        .filter(memberEntity -> adminUser.equals(memberEntity.getName()))
-                                        .map(MemberEntity::getId).collect(Collectors.toSet()))
-                        .teamAPlayers(new ArrayList<>())
-                        .teamBPlayers(new ArrayList<>())
-                        .teamAGuests(new ArrayList<>())
-                        .teamBGuests(new ArrayList<>())
-                        .closed(false)
-                        .build(), MatchEntity.builder()
-                        .matchDay(LocalDate.now().minusDays(14))
-                        .confirmedPlayers(new HashSet<>())
-                        .notAvailablePlayers(new HashSet<>())
-                        .unConfirmedPlayers(
-                                memberRepository.findAll().stream()
-                                        .filter(memberEntity -> adminUser.equals(memberEntity.getName()))
-                                        .map(MemberEntity::getId).collect(Collectors.toSet()))
-                        .teamAPlayers(new ArrayList<>())
-                        .teamBPlayers(new ArrayList<>())
-                        .teamAGuests(new ArrayList<>())
-                        .teamBGuests(new ArrayList<>())
-                        .closed(false)
-                        .build()));
+        matchRepository.saveAll(List.of(MatchEntity.builder()
+                .matchDay(LocalDate.now().minusDays(7))
+                .confirmedPlayers(new HashSet<>())
+                .notAvailablePlayers(new HashSet<>())
+                .unConfirmedPlayers(
+                        memberRepository.findAll().stream()
+                                .filter(memberEntity -> adminUser.equals(memberEntity.getName()))
+                                .map(MemberEntity::getId).collect(Collectors.toSet()))
+                .teamAPlayers(new ArrayList<>())
+                .teamBPlayers(new ArrayList<>())
+                .teamAGuests(new ArrayList<>())
+                .teamBGuests(new ArrayList<>())
+                .closed(false)
+                .build(), MatchEntity.builder()
+                .matchDay(LocalDate.now().minusDays(14))
+                .confirmedPlayers(new HashSet<>())
+                .notAvailablePlayers(new HashSet<>())
+                .unConfirmedPlayers(
+                        memberRepository.findAll().stream()
+                                .filter(memberEntity -> adminUser.equals(memberEntity.getName()))
+                                .map(MemberEntity::getId).collect(Collectors.toSet()))
+                .teamAPlayers(new ArrayList<>())
+                .teamBPlayers(new ArrayList<>())
+                .teamAGuests(new ArrayList<>())
+                .teamBGuests(new ArrayList<>())
+                .closed(false)
+                .build()));
 
         if (token == null) loginWithUser("MatchUser5");
 
@@ -341,7 +341,7 @@ public class MatchControllerTest {
     @Test
     @DisplayName("Create match with an existing match already created")
     void createMatchAlreadyCreated() throws Exception {
-        var matchInDb = matchRepository.save(MatchEntity.builder()
+        matchRepository.save(MatchEntity.builder()
                 .matchDay(LocalDate.now())
                 .confirmedPlayers(new HashSet<>())
                 .notAvailablePlayers(new HashSet<>())
@@ -457,9 +457,9 @@ public class MatchControllerTest {
 
         Assertions.assertTrue(matchClosed.isClosed());
 
-        Assertions.assertFalse(movementRepository.findByMemberId(members.get(0).getId()).isEmpty());
-        Assertions.assertFalse(movementRepository.findByMemberId(members.get(1).getId()).isEmpty());
-        Assertions.assertTrue(movementRepository.findByMemberId(members.get(2).getId()).isEmpty());
+        Assertions.assertFalse(movementRepository.findByMemberId(members.get(0).getId(), Sort.by(Sort.Direction.DESC, "createdOn")).isEmpty());
+        Assertions.assertFalse(movementRepository.findByMemberId(members.get(1).getId(), Sort.by(Sort.Direction.DESC, "createdOn")).isEmpty());
+        Assertions.assertTrue(movementRepository.findByMemberId(members.get(2).getId(), Sort.by(Sort.Direction.DESC, "createdOn")).isEmpty());
 
         movementRepository.deleteAll();
         matchRepository.deleteAll();
@@ -534,9 +534,9 @@ public class MatchControllerTest {
 
         Assertions.assertTrue(matchClosed.isClosed());
 
-        Assertions.assertFalse(movementRepository.findByMemberId(members.get(0).getId()).isEmpty());
-        Assertions.assertFalse(movementRepository.findByMemberId(members.get(1).getId()).isEmpty());
-        Assertions.assertTrue(movementRepository.findByMemberId(members.get(2).getId()).isEmpty());
+        Assertions.assertFalse(movementRepository.findByMemberId(members.get(0).getId(), Sort.by(Sort.Direction.DESC, "createdOn")).isEmpty());
+        Assertions.assertFalse(movementRepository.findByMemberId(members.get(1).getId(), Sort.by(Sort.Direction.DESC, "createdOn")).isEmpty());
+        Assertions.assertTrue(movementRepository.findByMemberId(members.get(2).getId(), Sort.by(Sort.Direction.DESC, "createdOn")).isEmpty());
         Assertions.assertEquals(1, memberRepository.findById(members.get(0).getId()).get().getNCaptaincies());
         Assertions.assertEquals(1, memberRepository.findById(members.get(1).getId()).get().getNCaptaincies());
 
