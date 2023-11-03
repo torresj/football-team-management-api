@@ -157,6 +157,52 @@ public class MovementControllerTest {
     }
 
     @Test
+    @DisplayName("Get all movements without filters no admin user")
+    void getAllMovementsNoAdmin() throws Exception {
+        movementRepository.saveAll(
+                List.of(
+                        MovementEntity.builder()
+                                .amount(-10)
+                                .type(MovementType.EXPENSE)
+                                .description("")
+                                .memberId(1)
+                                .build(),
+                        MovementEntity.builder()
+                                .amount(10)
+                                .type(MovementType.INCOME)
+                                .description("")
+                                .memberId(1)
+                                .build(),
+                        MovementEntity.builder()
+                                .amount(-10)
+                                .type(MovementType.EXPENSE)
+                                .description("")
+                                .memberId(2)
+                                .build(),
+                        MovementEntity.builder()
+                                .amount(10)
+                                .type(MovementType.INCOME)
+                                .description("")
+                                .memberId(2)
+                                .build()));
+
+        if (token == null) loginWithUser("userTest8");
+
+        var result =
+                mockMvc
+                        .perform(get("/v1/movements?elements=2&page=0").header("Authorization", "Bearer " + token))
+                        .andExpect(status().isOk());
+
+        var content = result.andReturn().getResponse().getContentAsString();
+        List<MovementDto> movements =
+                objectMapper.readValue(new JSONObject(content).getString("content"), new TypeReference<>() {
+                });
+
+        Assertions.assertEquals(2, movements.size());
+        movementRepository.deleteAll();
+    }
+
+    @Test
     @DisplayName("Get all movements with filter")
     void getAllMovementsWithFilter() throws Exception {
         movementRepository.saveAll(
@@ -292,18 +338,6 @@ public class MovementControllerTest {
 
         Assertions.assertEquals(2, movements.size());
         movementRepository.deleteAll();
-    }
-
-
-    @Test
-    @DisplayName("Get all movements without role admin")
-    void getAllMovementsNoRoleAdmin() throws Exception {
-
-        if (token == null) loginWithUser("testUser");
-
-        mockMvc
-                .perform(get("/v1/movements?elements=2&page=0").header("Authorization", "Bearer " + token))
-                .andExpect(status().isForbidden());
     }
 
     @Test

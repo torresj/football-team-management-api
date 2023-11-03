@@ -6,14 +6,11 @@ import com.torresj.footballteammanagementapi.exceptions.MovementNotFoundExceptio
 import com.torresj.footballteammanagementapi.services.MovementService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-
-import java.util.List;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +28,6 @@ public class MovementController {
 
     private final MovementService movementService;
 
-    @Secured("ROLE_ADMIN")
     @GetMapping
     @SecurityRequirement(name = "Bearer Authentication")
     @Operation(summary = "Get all movements")
