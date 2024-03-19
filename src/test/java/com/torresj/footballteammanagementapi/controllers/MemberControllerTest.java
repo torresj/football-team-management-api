@@ -471,6 +471,34 @@ public class MemberControllerTest {
     }
 
     @Test
+    @DisplayName("Update logged member alias")
+    void updateLoggedMemberAlias() throws Exception {
+        var updateDto = new UpdateAliasDto("alias");
+
+        if (token == null) loginWithUser("User5");
+
+        var member =
+                memberRepository
+                        .findByNameAndSurname("User5", "User5")
+                        .orElseThrow(() -> new MemberNotFoundException(""));
+
+        mockMvc
+                .perform(
+                        patch("/v1/members/me/alias")
+                                .header("Authorization", "Bearer " + token)
+                                .accept(MediaType.APPLICATION_JSON)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(updateDto)))
+                .andExpect(status().isOk());
+
+        var entityUpdated =
+                memberRepository
+                        .findById(member.getId())
+                        .orElseThrow(() -> new MemberNotFoundException(""));
+        Assertions.assertEquals("alias", entityUpdated.getAlias());
+    }
+
+    @Test
     @DisplayName("Update member injured status")
     void updateMemberInjuredStatus() throws Exception {
         var entity =

@@ -245,6 +245,35 @@ public class MemberController {
         return ResponseEntity.ok().build();
     }
 
+    @PatchMapping("/me/alias")
+    @Operation(summary = "Update Member alias")
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Alias updated",
+                            content = {@Content()}),
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "Member Not Found",
+                            content = {@Content()})
+            })
+    @SecurityRequirement(name = "Bearer Authentication")
+    ResponseEntity<Void> updateMyAlias(
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "Update Member alias",
+                    required = true,
+                    content = @Content(schema = @Schema(implementation = UpdateAliasDto.class)))
+            @RequestBody
+            UpdateAliasDto request,
+            Principal principal)
+            throws MemberNotFoundException {
+        log.info("[MEMBERS] Updating user " + principal.getName());
+        memberService.updateMyAlias(principal.getName(), request.alias());
+        log.info("[MEMBERS] Member updated");
+        return ResponseEntity.ok().build();
+    }
+
     @Secured("ROLE_ADMIN")
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete member")

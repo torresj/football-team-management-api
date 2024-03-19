@@ -187,6 +187,30 @@ public class MemberServiceImpl implements MemberService, UserDetailsService {
     }
 
     @Override
+    public void updateMyAlias(String user, String alias) throws MemberNotFoundException {
+        if (user.split("\\.").length != 2) {
+            throw new MemberNotFoundException(user);
+        }
+        var member =
+                memberRepository
+                        .findByNameAndSurname(user.split("\\.")[0], user.split("\\.")[1])
+                        .orElseThrow(() -> new MemberNotFoundException(""));
+        memberRepository.save(
+                MemberEntity.builder()
+                        .id(member.getId())
+                        .name(member.getName())
+                        .alias(alias)
+                        .surname(member.getSurname())
+                        .password(member.getPassword())
+                        .nonce(member.getNonce())
+                        .nCaptaincies(member.getNCaptaincies())
+                        .role(member.getRole())
+                        .phone(member.getPhone())
+                        .injured(member.isInjured())
+                        .build());
+    }
+
+    @Override
     public void delete(long id) {
         memberRepository.deleteById(id);
     }
