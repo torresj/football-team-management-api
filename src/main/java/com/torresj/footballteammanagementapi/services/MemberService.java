@@ -12,8 +12,8 @@ public interface MemberService {
     void setInjured(long id, boolean injured) throws MemberNotFoundException;
     MemberDto get(String username) throws MemberNotFoundException;
     List<MemberDto> get();
-    MemberDto update(long id, String name, String surname, String phone, int nCaptaincies, Role role) throws MemberNotFoundException;
-    MemberDto create(String name, String surname, String phone, String password, Role role) throws MemberAlreadyExistsException;
+    MemberDto update(long id, String name, String alias, String surname, String phone, int nCaptaincies, Role role) throws MemberNotFoundException;
+    MemberDto create(String name, String alias, String surname, String phone, String password, Role role) throws MemberAlreadyExistsException;
     void updateMyPassword(String user, String newPassword) throws MemberNotFoundException;
     void delete(long id);
 }

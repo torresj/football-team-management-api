@@ -5,6 +5,7 @@ import com.torresj.footballteammanagementapi.enums.Role;
 public record MemberDto(
     Long id,
     String name,
+    String alias,
     String surname,
     String phone,
     int nCaptaincies,

@@ -294,7 +294,7 @@ public class MemberControllerTest {
     @Test
     @DisplayName("Create member")
     void createMember() throws Exception {
-        var member = new CreateMemberDto("test", "test", "", Role.USER);
+        var member = new CreateMemberDto("test", "test","test", "", Role.USER);
 
         if (adminToken == null) loginWithAdmin();
 
@@ -315,7 +315,7 @@ public class MemberControllerTest {
     @Test
     @DisplayName("Create member already exists")
     void createMemberAlreadyExits() throws Exception {
-        var member = new CreateMemberDto("test", "test", "", Role.USER);
+        var member = new CreateMemberDto("test", "test", "test", "", Role.USER);
         var entity =
                 memberRepository.save(
                         MemberEntity.builder()
@@ -343,7 +343,7 @@ public class MemberControllerTest {
     @Test
     @DisplayName("Create member without admin role")
     void createMemberWithoutAdminRole() throws Exception {
-        var member = new CreateMemberDto("test", "test", "", Role.USER);
+        var member = new CreateMemberDto("test", "test", "test", "", Role.USER);
 
         if (token == null) loginWithUser("User1");
 
@@ -369,7 +369,7 @@ public class MemberControllerTest {
                                 .name("test")
                                 .surname("test")
                                 .build());
-        var updateDto = new UpdateMemberDto("test2", "test2", "1", Role.ADMIN, 10);
+        var updateDto = new UpdateMemberDto("test2", "test2", "test2", "1", Role.ADMIN, 10);
 
         if (adminToken == null) loginWithAdmin();
 
@@ -394,7 +394,7 @@ public class MemberControllerTest {
     @Test
     @DisplayName("Update member doesn't exist")
     void updateMemberNotExist() throws Exception {
-        var updateDto = new UpdateMemberDto("test2", "test2", "1", Role.ADMIN, 10);
+        var updateDto = new UpdateMemberDto("test2", "test2", "test2", "1", Role.ADMIN, 10);
 
         if (adminToken == null) loginWithAdmin();
 
@@ -411,7 +411,7 @@ public class MemberControllerTest {
     @Test
     @DisplayName("Update member without admin role")
     void updateMemberWithoutAdminRole() throws Exception {
-        var updateDto = new UpdateMemberDto("test2", "test2", "1", Role.ADMIN, 10);
+        var updateDto = new UpdateMemberDto("test2", "test2","test2", "1", Role.ADMIN, 10);
 
         if (token == null) loginWithUser("User2");
 

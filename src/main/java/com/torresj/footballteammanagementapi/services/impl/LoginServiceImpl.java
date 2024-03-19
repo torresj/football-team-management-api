@@ -45,6 +45,7 @@ public class LoginServiceImpl implements LoginService {
                 MemberEntity.builder()
                         .id(member.getId())
                         .name(member.getName())
+                        .alias(member.getAlias())
                         .surname(member.getSurname())
                         .password(member.getPassword())
                         .phone(member.getPhone())

@@ -21,6 +21,9 @@ public class MemberEntity {
     @Column(nullable = false)
     private String name;
 
+    @Column
+    private String alias;
+
     @Column(nullable = false)
     private String surname;
 

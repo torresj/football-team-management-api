@@ -165,6 +165,7 @@ public class MemberController {
         var member =
                 memberService.create(
                         request.name(),
+                        request.alias(),
                         request.surname(),
                         request.phone(),
                         encoder.encode(defaultPassword),
@@ -206,6 +207,7 @@ public class MemberController {
         memberService.update(
                 id,
                 request.name(),
+                request.alias(),
                 request.surname(),
                 request.phone(),
                 request.nCaptaincies(),

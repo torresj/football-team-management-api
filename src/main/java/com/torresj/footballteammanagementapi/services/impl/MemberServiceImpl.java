@@ -35,6 +35,7 @@ public class MemberServiceImpl implements MemberService, UserDetailsService {
         return new MemberDto(
                 member.getId(),
                 member.getName(),
+                member.getAlias(),
                 member.getSurname(),
                 member.getPhone(),
                 member.getNCaptaincies(),
@@ -50,6 +51,7 @@ public class MemberServiceImpl implements MemberService, UserDetailsService {
                 MemberEntity.builder()
                         .id(member.getId())
                         .name(member.getName())
+                        .alias(member.getAlias())
                         .surname(member.getSurname())
                         .phone(member.getPhone())
                         .role(member.getRole())
@@ -72,6 +74,7 @@ public class MemberServiceImpl implements MemberService, UserDetailsService {
         return new MemberDto(
                 member.getId(),
                 member.getName(),
+                member.getAlias(),
                 member.getSurname(),
                 member.getPhone(),
                 member.getNCaptaincies(),
@@ -88,6 +91,7 @@ public class MemberServiceImpl implements MemberService, UserDetailsService {
                                 new MemberDto(
                                         entity.getId(),
                                         entity.getName(),
+                                        entity.getAlias(),
                                         entity.getSurname(),
                                         entity.getPhone(),
                                         entity.getNCaptaincies(),
@@ -100,13 +104,14 @@ public class MemberServiceImpl implements MemberService, UserDetailsService {
 
     @Override
     public MemberDto update(
-            long id, String name, String surname, String phone, int nCaptaincies, Role role)
+            long id, String name, String alias, String surname, String phone, int nCaptaincies, Role role)
             throws MemberNotFoundException {
         var member = memberRepository.findById(id).orElseThrow(() -> new MemberNotFoundException(""));
         var memberUpdated = memberRepository.save(
                 MemberEntity.builder()
                         .id(member.getId())
                         .name(name)
+                        .alias(alias)
                         .surname(surname)
                         .phone(phone)
                         .role(role)
@@ -118,6 +123,7 @@ public class MemberServiceImpl implements MemberService, UserDetailsService {
         return new MemberDto(
                 memberUpdated.getId(),
                 name,
+                alias,
                 surname,
                 phone,
                 nCaptaincies,
@@ -127,7 +133,7 @@ public class MemberServiceImpl implements MemberService, UserDetailsService {
     }
 
     @Override
-    public MemberDto create(String name, String surname, String phone, String password, Role role)
+    public MemberDto create(String name, String alias, String surname, String phone, String password, Role role)
             throws MemberAlreadyExistsException {
         if (memberRepository.findByNameAndSurname(name, surname).isPresent())
             throw new MemberAlreadyExistsException(name);
@@ -136,6 +142,7 @@ public class MemberServiceImpl implements MemberService, UserDetailsService {
                 memberRepository.save(
                         MemberEntity.builder()
                                 .name(name)
+                                .alias(alias)
                                 .surname(surname)
                                 .phone(phone)
                                 .role(role)
@@ -146,6 +153,7 @@ public class MemberServiceImpl implements MemberService, UserDetailsService {
         return new MemberDto(
                 member.getId(),
                 member.getName(),
+                member.getAlias(),
                 member.getSurname(),
                 member.getPhone(),
                 member.getNCaptaincies(),
@@ -167,6 +175,7 @@ public class MemberServiceImpl implements MemberService, UserDetailsService {
                 MemberEntity.builder()
                         .id(member.getId())
                         .name(member.getName())
+                        .alias(member.getAlias())
                         .surname(member.getSurname())
                         .password(newPassword)
                         .nonce(member.getNonce())
