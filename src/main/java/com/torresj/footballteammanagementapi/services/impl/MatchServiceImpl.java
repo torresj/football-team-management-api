@@ -385,7 +385,9 @@ public class MatchServiceImpl implements MatchService {
                 playerId,
                 member
                         .map(memberEntity -> memberEntity.getName() + " " + memberEntity.getSurname())
-                        .orElse("Not found"));
+                        .orElse("Not found"),
+                member.map(MemberEntity::getAlias).orElse(null)
+        );
     }
 
     private MatchDto matchToDto(MatchEntity entity) {
