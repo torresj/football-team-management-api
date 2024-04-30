@@ -81,7 +81,7 @@ public class MovementServiceImpl implements MovementService {
                 movementRepository.save(
                         MovementEntity.builder()
                                 .type(type)
-                                .amount(amount)
+                                .amount(checkAndReturnAmount(type,amount))
                                 .memberId(memberId)
                                 .description(description)
                                 .build());
@@ -111,7 +111,7 @@ public class MovementServiceImpl implements MovementService {
                         MovementEntity.builder()
                                 .id(movement.getId())
                                 .type(movement.getType())
-                                .amount(amount)
+                                .amount(checkAndReturnAmount(movement.getType(),amount))
                                 .memberId(movement.getMemberId())
                                 .description(description)
                                 .createdOn(movement.getCreatedOn())
@@ -173,5 +173,13 @@ public class MovementServiceImpl implements MovementService {
                 entity.getAmount(),
                 entity.getDescription(),
                 formatter.format(entity.getCreatedOn()));
+    }
+
+    private double checkAndReturnAmount(MovementType type, double amount){
+        if(type.equals(MovementType.EXPENSE)){
+            return amount > 0 ? amount * -1 : amount;
+        }else{
+            return amount < 0 ? amount * -1 : amount;
+        }
     }
 }
