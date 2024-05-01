@@ -89,10 +89,7 @@ public class TeamMovementServiceImpl implements TeamMovementService {
     @Override
     public TotalBalanceDto getTotalBalance() {
         List<MovementEntity> membersMovements = movementRepository.findAll();
-        double membersTotalExpenses = membersMovements.stream()
-                .filter(movement -> movement.getType() == MovementType.EXPENSE)
-                .mapToDouble(MovementEntity::getAmount)
-                .sum();
+
         double membersTotalIncomes = membersMovements.stream()
                 .filter(movement -> movement.getType() == MovementType.INCOME)
                 .mapToDouble(MovementEntity::getAmount)
@@ -110,7 +107,7 @@ public class TeamMovementServiceImpl implements TeamMovementService {
                 .sum();
 
     return new TotalBalanceDto(
-            membersTotalExpenses + teamTotalExpenses,
+            teamTotalExpenses,
             membersTotalIncomes + teamTotalIncomes
     );
   }

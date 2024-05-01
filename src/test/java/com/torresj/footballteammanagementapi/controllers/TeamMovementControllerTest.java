@@ -396,7 +396,7 @@ public class TeamMovementControllerTest {
         var content = result.andReturn().getResponse().getContentAsString();
         TotalBalanceDto response = objectMapper.readValue(content, TotalBalanceDto.class);
 
-        Assertions.assertEquals(-24, response.totalExpenses());
+        Assertions.assertEquals(-20, response.totalExpenses());
         Assertions.assertEquals(51, response.totalIncomes());
 
         movementRepository.deleteAll(movements);
