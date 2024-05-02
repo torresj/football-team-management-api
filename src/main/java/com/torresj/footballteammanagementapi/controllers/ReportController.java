@@ -27,8 +27,6 @@ public class ReportController {
 
   private final ReportService reportService;
 
-
-  @Secured("ROLE_ADMIN")
   @Operation(summary = "")
   @ApiResponses(
       value = {
