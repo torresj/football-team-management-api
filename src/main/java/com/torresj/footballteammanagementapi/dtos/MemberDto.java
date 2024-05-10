@@ -11,4 +11,5 @@ public record MemberDto(
     int nCaptaincies,
     Role role,
     double balance,
-    boolean injured) {}
+    boolean injured,
+    boolean blocked) {}

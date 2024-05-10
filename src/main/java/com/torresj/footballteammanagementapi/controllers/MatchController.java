@@ -181,7 +181,7 @@ public class MatchController {
                                            required = true,
                                            content = @Content(schema = @Schema(implementation = AddPlayerRequestDto.class)))
                                    @RequestBody AddPlayerRequestDto request, Principal principal)
-            throws MatchNotFoundException, MemberNotFoundException {
+            throws MatchNotFoundException, MemberNotFoundException, MemberBlockedException {
         log.info("[MATCHES] Adding player " + principal.getName() + " to match " + id);
         matchService.addPlayer(id, request.status(), principal.getName());
         log.info("[MATCHES] Player added");

@@ -19,7 +19,7 @@ public interface MatchService {
   void close(long id) throws MatchNotFoundException;
 
   void addPlayer(long matchId, PlayerMatchStatus status, String playerName)
-      throws MemberNotFoundException, MatchNotFoundException;
+      throws MemberNotFoundException, MatchNotFoundException, MemberBlockedException;
 
   void addPlayerToTeamA(long matchId, long playerId)
       throws MatchNotFoundException, MemberNotFoundException, PlayerUnavailableException;

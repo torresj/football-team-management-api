@@ -30,6 +30,15 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     return problemDetail;
   }
 
+  @ExceptionHandler(MemberBlockedException.class)
+  ProblemDetail memberBlockedException(MemberBlockedException e) {
+    ProblemDetail problemDetail =
+            ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, e.getMessage());
+    problemDetail.setTitle("Member is blocked");
+    log.error(e.toString());
+    return problemDetail;
+  }
+
   @ExceptionHandler(MovementNotFoundException.class)
   ProblemDetail movementNotFoundException(MovementNotFoundException e) {
     ProblemDetail problemDetail =

@@ -324,4 +324,33 @@ public class MemberController {
         log.info("[MEMBERS] Member " + id + " injured status updated");
         return ResponseEntity.ok().build();
     }
+
+    @Secured("ROLE_ADMIN")
+    @PatchMapping("/{id}/blocked")
+    @Operation(summary = "Change blocked status of a member")
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "member updated",
+                            content = {@Content()}),
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "member not found",
+                            content = {@Content()})
+            })
+    @SecurityRequirement(name = "Bearer Authentication")
+    ResponseEntity<Void> updateBlockedStatus(
+            @Parameter(description = "Member id") @PathVariable long id,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "Update Member",
+                    required = true,
+                    content = @Content(schema = @Schema(implementation = RequestBlockedDto.class)))
+            @RequestBody
+            RequestBlockedDto request) throws MemberNotFoundException {
+        log.info("[MEMBERS] Updating member " + id + " blocked status to ");
+        memberService.setBlocked(id, request.blocked());
+        log.info("[MEMBERS] Member " + id + " blocked status updated");
+        return ResponseEntity.ok().build();
+    }
 }
