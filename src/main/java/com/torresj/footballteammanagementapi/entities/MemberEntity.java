@@ -45,6 +45,6 @@ public class MemberEntity {
     @Column(nullable = false)
     private boolean injured;
 
-    @Column
+    @Column(nullable = false)
     private boolean blocked;
 }

@@ -35,6 +35,8 @@ public class AdminConfigUser {
             .password(encoder.encode(adminPassword))
             .role(Role.ADMIN)
             .phone("")
+            .blocked(false)
+            .injured(false)
             .build());
   }
 }
